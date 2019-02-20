@@ -2,7 +2,7 @@ package util
 
 import (
 	"encoding/json"
-	"goxip/pkg/paginator"
+	"github.com/cshum/gopkg/paginator"
 	"net/http"
 )
 
