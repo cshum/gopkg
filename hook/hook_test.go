@@ -23,8 +23,8 @@ func TestHook(t *testing.T) {
 	})
 	ctx, err := Invoke(context.Background(), "a")
 	fmt.Println(time.Since(from))
-	if time.Since(from) < time.Second {
-		t.Error("Expect run >1 second")
+	if time.Since(from) < time.Millisecond*1200 {
+		t.Error("Expect run >=1.2 second")
 	}
 	if time.Since(from) > time.Millisecond*1300 {
 		t.Error("Expect run <1.3 seconds")
