@@ -18,7 +18,7 @@ type Paginator struct {
 // New create Paginator of page size
 func New(size int) *Paginator {
 	if size < 1 {
-		panic(errors.New("Size must be non-zero positive integer"))
+		panic(errors.New("size must be non-zero positive integer"))
 	}
 	return &Paginator{Page: 1, Size: size}
 }
@@ -56,7 +56,7 @@ func (p *Paginator) SetCount(count int64) {
 
 // PaginatorMods for sqlboiler
 func (p *Paginator) PaginatorMods(q ...qm.QueryMod) []qm.QueryMod {
-	query := []qm.QueryMod{}
+	var query []qm.QueryMod
 	if len(q) > 0 {
 		query = append(query, q...)
 	}
