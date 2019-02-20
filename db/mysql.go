@@ -1,0 +1,20 @@
+package db
+
+import (
+	"database/sql"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql" // mysql
+)
+
+// MySQL connection pool
+func MySQL(host string, userName string, password string, port string, dbName string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", userName+":"+password+"@tcp("+host+":"+port+")/"+dbName+"?parseTime=true")
+	if err != nil {
+		return nil, err
+	}
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(time.Hour / 2)
+	return db, nil
+}
