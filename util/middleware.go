@@ -3,6 +3,8 @@ package util
 import (
 	"errors"
 	"net/http"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -90,7 +92,13 @@ func FileServer(r chi.Router, path string, dirname string) {
 	if strings.ContainsAny(path, "{}*") {
 		panic(errors.New("FileServer does not permit URL parameters"))
 	}
-	fs := http.StripPrefix(path, http.FileServer(http.Dir(dirname)))
+	_, callerFileName, _, _ := runtime.Caller(1)
+	curr, err := filepath.Abs(filepath.Dir(callerFileName))
+	if err != nil {
+		panic(err)
+	}
+	filesDir := filepath.Join(curr, dirname)
+	fs := http.StripPrefix(path, http.FileServer(http.Dir(filesDir)))
 	if path != "/" && path[len(path)-1] != '/' {
 		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
 		path += "/"
