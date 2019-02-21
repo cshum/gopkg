@@ -6,10 +6,12 @@ import (
 )
 
 var lock = &sync.RWMutex{}
-var hooks = map[string][]func(context.Context) (context.Context, error){}
+var hooks = map[string][]Handler{}
+
+type Handler func(ctx context.Context) (context.Context, error)
 
 // Add add hook
-func Add(hookType string, hook func(ctx context.Context) (context.Context, error)) {
+func Add(hookType string, hook Handler) {
 	lock.Lock()
 	defer lock.Unlock()
 	hooks[hookType] = append(hooks[hookType], hook)
@@ -19,27 +21,28 @@ func Add(hookType string, hook func(ctx context.Context) (context.Context, error
 func Clear(hookType string) {
 	lock.Lock()
 	defer lock.Unlock()
-	hooks[hookType] = []func(context.Context) (context.Context, error){}
+	hooks[hookType] = []Handler{}
 }
 
 // Reset reset all hooks
 func Reset() {
 	lock.Lock()
 	defer lock.Unlock()
-	hooks = map[string][]func(context.Context) (context.Context, error){}
+	hooks = map[string][]Handler{}
 }
 
-func getByType(hookType string) []func(context.Context) (context.Context, error) {
+func getByType(hookType string) ([]Handler, int) {
 	lock.RLock()
 	defer lock.RUnlock()
-	fns := make([]func(context.Context) (context.Context, error), len(hooks[hookType]))
+	cnt := len(hooks[hookType])
+	fns := make([]Handler, cnt)
 	copy(fns, hooks[hookType])
-	return fns
+	return fns, cnt
 }
 
 // Invoke invoke hook
 func Invoke(ctx context.Context, hookType string) (context.Context, error) {
-	fns := getByType(hookType)
+	fns, _ := getByType(hookType)
 	var err error
 	for _, fn := range fns {
 		ctx, err = fn(ctx)
@@ -52,13 +55,12 @@ func Invoke(ctx context.Context, hookType string) (context.Context, error) {
 
 // Parallel invoke hook in parallel
 func Parallel(ctx context.Context, hookType string) ([]context.Context, []error) {
-	fns := getByType(hookType)
-	ctxs := make(chan context.Context)
-	errors := make(chan error)
-	count := len(fns)
+	fns, cnt := getByType(hookType)
+	ctxs := make(chan context.Context, cnt)
+	errors := make(chan error, cnt)
 	for _, fn := range fns {
 		go func(
-			fn func(ctx context.Context) (context.Context, error),
+			fn Handler,
 			ctxs chan<- context.Context,
 			errors chan<- error,
 		) {
@@ -72,7 +74,7 @@ func Parallel(ctx context.Context, hookType string) ([]context.Context, []error)
 	}
 	var clist []context.Context
 	var elist []error
-	for i := 0; i < count; i++ {
+	for i := 0; i < cnt; i++ {
 		select {
 		case c := <-ctxs:
 			clist = append(clist, c)
