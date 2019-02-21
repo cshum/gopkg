@@ -80,5 +80,7 @@ func Parallel(ctx context.Context, hookType string) ([]context.Context, []error)
 			elist = append(elist, e)
 		}
 	}
+	close(ctxs)
+	close(errors)
 	return clist, elist
 }
