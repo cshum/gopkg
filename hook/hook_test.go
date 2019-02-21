@@ -8,21 +8,21 @@ import (
 	"time"
 )
 
-func TestHook(t *testing.T) {
+func DoInvoke(t *testing.T, hookType string) {
 	from := time.Now()
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("foo: bar")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "foo", "bar"), nil
 	})
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("hello: world")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "hello", "world"), nil
 	})
-	ctx, err := Invoke(context.Background(), "a")
+	ctx, err := Invoke(context.Background(), hookType)
 	fmt.Println(time.Since(from))
 	if time.Since(from) < time.Millisecond*600 {
 		t.Error("Expect run >=0.6 second")
@@ -39,24 +39,23 @@ func TestHook(t *testing.T) {
 	if ctx.Value("hello") != "world" {
 		t.Error("Expect ctx value hello: world")
 	}
-	Clear("a")
 }
 
-func TestHookWithError(t *testing.T) {
+func DoInvokeWithError(t *testing.T, hookType string) {
 	from := time.Now()
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("foo: bar")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "foo", "bar"), nil
 	})
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("hello: world")
 		fmt.Println(time.Now())
 		return ctx, errors.New("err")
 	})
-	ctx, err := Invoke(context.Background(), "a")
+	ctx, err := Invoke(context.Background(), hookType)
 	fmt.Println(time.Since(from))
 	if time.Since(from) < time.Millisecond*600 {
 		t.Error("Expect run >=0.6 second")
@@ -70,24 +69,23 @@ func TestHookWithError(t *testing.T) {
 	if ctx.Value("foo") != "bar" {
 		t.Error("Expect ctx value foo: bar")
 	}
-	Clear("a")
 }
 
-func TestHookParallel(t *testing.T) {
+func DoInvokeParallel(t *testing.T, hookType string) {
 	from := time.Now()
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("foo: bar")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "foo", "bar"), nil
 	})
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("hello: world")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "hello", "world"), nil
 	})
-	ctxs, errs := Parallel(context.Background(), "a")
+	ctxs, errs := Parallel(context.Background(), hookType)
 	fmt.Println(time.Since(from))
 	if time.Since(from) < time.Millisecond*300 {
 		t.Error("Expect run >=0.3 second")
@@ -105,24 +103,23 @@ func TestHookParallel(t *testing.T) {
 		(ctxs[1].Value("foo") == "bar" && ctxs[0].Value("hello") == "world")) {
 		t.Error("Invalid result")
 	}
-	Reset()
 }
 
-func TestHookWithErrorParallel(t *testing.T) {
+func DoInvokeWithErrorParallel(t *testing.T, hookType string) {
 	from := time.Now()
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("foo: bar")
 		fmt.Println(time.Now())
 		return context.WithValue(ctx, "foo", "bar"), nil
 	})
-	Add("a", func(ctx context.Context) (context.Context, error) {
+	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
 		fmt.Println("hello: world")
 		fmt.Println(time.Now())
 		return ctx, errors.New("err")
 	})
-	ctxs, errs := Parallel(context.Background(), "a")
+	ctxs, errs := Parallel(context.Background(), hookType)
 	fmt.Println(time.Since(from))
 	if time.Since(from) < time.Millisecond*300 {
 		t.Error("Expect run >=0.3 second")
@@ -139,5 +136,32 @@ func TestHookWithErrorParallel(t *testing.T) {
 	if ctxs[0].Value("foo") != "bar" {
 		t.Error("Invalid result")
 	}
+}
+
+func TestHook(t *testing.T) {
+	DoInvoke(t, "a")
+	Clear("a")
+}
+
+func TestHookWithError(t *testing.T) {
+	DoInvokeWithError(t, "b")
+	Clear("b")
+}
+
+func TestHookParallel(t *testing.T) {
+	DoInvokeParallel(t, "c")
+	Reset()
+}
+
+func TestHookWithErrorParallel(t *testing.T) {
+	DoInvokeWithErrorParallel(t, "d")
+	Reset()
+}
+
+func TestHookMixed(t *testing.T) {
+	DoInvoke(t, "a")
+	DoInvokeWithError(t, "b")
+	DoInvokeParallel(t, "c")
+	DoInvokeWithErrorParallel(t, "d")
 	Reset()
 }
