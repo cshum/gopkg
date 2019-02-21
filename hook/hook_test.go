@@ -139,29 +139,33 @@ func DoInvokeWithErrorParallel(t *testing.T, hookType string) {
 }
 
 func TestHook(t *testing.T) {
+	t.Parallel()
 	DoInvoke(t, "a")
 	Clear("a")
 }
 
 func TestHookWithError(t *testing.T) {
+	t.Parallel()
 	DoInvokeWithError(t, "b")
 	Clear("b")
 }
 
 func TestHookParallel(t *testing.T) {
+	t.Parallel()
 	DoInvokeParallel(t, "c")
-	Reset()
+	Clear("c")
 }
 
 func TestHookWithErrorParallel(t *testing.T) {
+	t.Parallel()
 	DoInvokeWithErrorParallel(t, "d")
-	Reset()
+	Clear("d")
 }
 
 func TestHookMixed(t *testing.T) {
-	DoInvoke(t, "a")
-	DoInvokeWithError(t, "b")
-	DoInvokeParallel(t, "c")
-	DoInvokeWithErrorParallel(t, "d")
+	DoInvoke(t, "e")
+	DoInvokeWithError(t, "f")
+	DoInvokeParallel(t, "g")
+	DoInvokeWithErrorParallel(t, "h")
 	Reset()
 }
