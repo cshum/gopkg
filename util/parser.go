@@ -17,6 +17,7 @@ func init() {
 	// schema decoder
 	decoder = schema.NewDecoder()
 	decoder.SetAliasTag("json")
+	decoder.IgnoreUnknownKeys(true)
 	validate = validator.New()
 }
 
