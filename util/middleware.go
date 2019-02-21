@@ -32,7 +32,7 @@ func RecoverHandler(handlers ...func(error)) func(http.Handler) http.Handler {
 	}
 }
 
-// JWTVerifier todo customer against rewardsnap params
+// JWTVerifier verify jwt token
 func JWTVerifier(ja *jwtauth.JWTAuth) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return jwtauth.Verify(
