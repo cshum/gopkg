@@ -15,6 +15,20 @@ func Add(hookType string, hook func(ctx context.Context) (context.Context, error
 	hooks[hookType] = append(hooks[hookType], hook)
 }
 
+// Clear clear hook func by type
+func Clear(hookType string) {
+	lock.Lock()
+	defer lock.Unlock()
+	hooks[hookType] = []func(context.Context) (context.Context, error){}
+}
+
+// Reset reset all hooks
+func Reset() {
+	lock.Lock()
+	defer lock.Unlock()
+	hooks = map[string][]func(context.Context) (context.Context, error){}
+}
+
 func getByType(hookType string) []func(context.Context) (context.Context, error) {
 	lock.RLock()
 	defer lock.RUnlock()
@@ -39,28 +53,28 @@ func Invoke(ctx context.Context, hookType string) (context.Context, error) {
 // Parallel invoke hook in parallel
 func Parallel(ctx context.Context, hookType string) ([]context.Context, []error) {
 	fns := getByType(hookType)
-	result := make(chan context.Context)
+	ctxs := make(chan context.Context)
 	errors := make(chan error)
 	count := len(fns)
 	for _, fn := range fns {
 		go func(
 			fn func(ctx context.Context) (context.Context, error),
-			result chan<- context.Context,
+			ctxs chan<- context.Context,
 			errors chan<- error,
 		) {
 			c, err := fn(ctx)
 			if err != nil {
 				errors <- err
 			} else {
-				result <- c
+				ctxs <- c
 			}
-		}(fn, result, errors)
+		}(fn, ctxs, errors)
 	}
 	var clist []context.Context
 	var elist []error
 	for i := 0; i < count; i++ {
 		select {
-		case c := <-result:
+		case c := <-ctxs:
 			clist = append(clist, c)
 		case e := <-errors:
 			elist = append(elist, e)
