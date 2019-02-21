@@ -169,3 +169,9 @@ func TestHookMixed(t *testing.T) {
 	DoInvokeWithErrorParallel(t, "h")
 	Reset()
 }
+func TestHookMixedAfterReset(t *testing.T) {
+	DoInvoke(t, "e")
+	DoInvokeWithError(t, "f")
+	DoInvokeParallel(t, "g")
+	DoInvokeWithErrorParallel(t, "h")
+}
