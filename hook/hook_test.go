@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func DoInvoke(t *testing.T, hookType string) {
+func DoInvoke(t *testing.T, hookType interface{}) {
 	from := time.Now()
 	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
@@ -41,7 +41,7 @@ func DoInvoke(t *testing.T, hookType string) {
 	}
 }
 
-func DoInvokeWithError(t *testing.T, hookType string) {
+func DoInvokeWithError(t *testing.T, hookType interface{}) {
 	from := time.Now()
 	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
@@ -71,7 +71,7 @@ func DoInvokeWithError(t *testing.T, hookType string) {
 	}
 }
 
-func DoInvokeParallel(t *testing.T, hookType string) {
+func DoInvokeParallel(t *testing.T, hookType interface{}) {
 	from := time.Now()
 	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
@@ -105,7 +105,7 @@ func DoInvokeParallel(t *testing.T, hookType string) {
 	}
 }
 
-func DoInvokeWithErrorParallel(t *testing.T, hookType string) {
+func DoInvokeWithErrorParallel(t *testing.T, hookType interface{}) {
 	from := time.Now()
 	Add(hookType, func(ctx context.Context) (context.Context, error) {
 		time.Sleep(time.Millisecond * 300)
@@ -146,14 +146,14 @@ func TestHook(t *testing.T) {
 
 func TestHookWithError(t *testing.T) {
 	t.Parallel()
-	DoInvokeWithError(t, "b")
-	Clear("b")
+	DoInvokeWithError(t, 1)
+	Clear(1)
 }
 
 func TestHookParallel(t *testing.T) {
 	t.Parallel()
-	DoInvokeParallel(t, "c")
-	Clear("c")
+	DoInvokeParallel(t, true)
+	Clear(true)
 }
 
 func TestHookWithErrorParallel(t *testing.T) {
@@ -164,7 +164,7 @@ func TestHookWithErrorParallel(t *testing.T) {
 
 func TestHookMixed(t *testing.T) {
 	DoInvoke(t, "e")
-	DoInvokeWithError(t, "f")
+	DoInvokeWithError(t, 1.2)
 	DoInvokeParallel(t, "g")
 	DoInvokeWithErrorParallel(t, "h")
 	Reset()

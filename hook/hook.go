@@ -6,19 +6,19 @@ import (
 )
 
 var lock = &sync.RWMutex{}
-var hooks = map[string][]Handler{}
+var hooks = map[interface{}][]Handler{}
 
 type Handler func(ctx context.Context) (context.Context, error)
 
 // Add add hook
-func Add(hookType string, hook Handler) {
+func Add(hookType interface{}, hook Handler) {
 	lock.Lock()
 	defer lock.Unlock()
 	hooks[hookType] = append(hooks[hookType], hook)
 }
 
 // Clear clear hook func by type
-func Clear(hookType string) {
+func Clear(hookType interface{}) {
 	lock.Lock()
 	defer lock.Unlock()
 	hooks[hookType] = []Handler{}
@@ -28,10 +28,10 @@ func Clear(hookType string) {
 func Reset() {
 	lock.Lock()
 	defer lock.Unlock()
-	hooks = map[string][]Handler{}
+	hooks = map[interface{}][]Handler{}
 }
 
-func getByType(hookType string) ([]Handler, int) {
+func getByType(hookType interface{}) ([]Handler, int) {
 	lock.RLock()
 	defer lock.RUnlock()
 	cnt := len(hooks[hookType])
@@ -41,7 +41,7 @@ func getByType(hookType string) ([]Handler, int) {
 }
 
 // Invoke invoke hook
-func Invoke(ctx context.Context, hookType string) (context.Context, error) {
+func Invoke(ctx context.Context, hookType interface{}) (context.Context, error) {
 	fns, _ := getByType(hookType)
 	var err error
 	for _, fn := range fns {
@@ -54,7 +54,7 @@ func Invoke(ctx context.Context, hookType string) (context.Context, error) {
 }
 
 // Parallel invoke hook in parallel
-func Parallel(ctx context.Context, hookType string) ([]context.Context, []error) {
+func Parallel(ctx context.Context, hookType interface{}) ([]context.Context, []error) {
 	fns, cnt := getByType(hookType)
 	ctxs := make(chan context.Context, cnt)
 	errors := make(chan error, cnt)
