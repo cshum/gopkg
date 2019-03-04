@@ -62,6 +62,7 @@ func BodyParse(r *http.Request, dst interface{}) error {
 	}
 	return nil
 }
+
 func isBodyJSON(r *http.Request) bool {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return false

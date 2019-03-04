@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	raven "github.com/getsentry/raven-go"
 	"github.com/go-chi/chi"
-	"go.uber.org/zap"
 )
 
 // ParamInt parse int from chi URL param
@@ -19,14 +17,6 @@ func ParamInt(r *http.Request, key string) (int, error) {
 		return 0, err
 	}
 	return int(val), nil
-}
-
-// PanicLogger capture errors to raven, optional logger
-func PanicLogger(logger *zap.Logger) {
-	if r := recover(); r != nil {
-		raven.CaptureError(r.(error), nil)
-		logger.Panic("panic", zap.Error(r.(error)))
-	}
 }
 
 // Bool2Int8 convert bool to int8
