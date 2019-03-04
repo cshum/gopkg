@@ -73,7 +73,7 @@ type Pagination struct {
 	HasNext     bool `json:"has_next"`
 	Total       int  `json:"total_pages"`
 	CurrentPage int  `json:"current_page"`
-	Size        int  `json:"per"`
+	Size        int  `json:"size"`
 }
 
 // Pagination create struct from total results count
