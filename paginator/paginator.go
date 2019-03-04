@@ -10,7 +10,7 @@ import (
 // Paginator for embedding pagination
 type Paginator struct {
 	Page  int `json:"page" validate:"min=1"`
-	Size  int `json:"per" validate:"min=1,max=100"`
+	Size  int `json:"size" validate:"min=1,max=100"`
 	count int64
 	total int
 }
