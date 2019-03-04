@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"github.com/cshum/gopkg/res"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -24,7 +25,7 @@ func RecoverHandler(handlers ...func(error)) func(http.Handler) http.Handler {
 					for _, handler := range handlers {
 						handler(rvr.(error))
 					}
-					Fail(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "")
+					res.Fail(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "")
 				}
 			}()
 			next.ServeHTTP(w, r)
@@ -53,11 +54,11 @@ func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, _, err := jwtauth.FromContext(r.Context())
 		if err != nil {
-			FailUnauthorized(w)
+			res.FailUnauthorized(w, "unauthorized")
 			return
 		}
 		if token == nil || !token.Valid {
-			FailUnauthorized(w)
+			res.FailUnauthorized(w, "unauthorized")
 			return
 		}
 		// authorized
