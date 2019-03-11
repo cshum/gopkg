@@ -10,16 +10,18 @@ import (
 // Env env loader based on envy, and show only loaded values
 type Env struct {
 	// only loaded on startup, should no need bother concurrent
-	m map[string]string
-	l *sync.RWMutex
+	files []string
+	m     map[string]string
+	l     *sync.RWMutex
 }
 
 // New env loader
 func New(files ...string) *Env {
 	_ = envy.Load(files...) // load .env file
 	return &Env{
-		m: make(map[string]string),
-		l: &sync.RWMutex{},
+		files: files,
+		m:     make(map[string]string),
+		l:     &sync.RWMutex{},
 	}
 }
 
@@ -43,7 +45,8 @@ func (m *Env) Map() map[string]string {
 func (m *Env) ZapFields() []zap.Field {
 	m.l.RLock()
 	defer m.l.RUnlock()
-	fields := make([]zap.Field, 0, len(m.m))
+	fields := make([]zap.Field, 0, len(m.m)+1)
+	fields = append(fields, zap.Strings(".env", m.files))
 	for k, v := range m.m {
 		fields = append(fields, zap.String(k, v))
 	}

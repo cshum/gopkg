@@ -23,7 +23,7 @@ func RecoverHandler(handlers ...func(error)) func(http.Handler) http.Handler {
 					for _, handler := range handlers {
 						handler(rvr.(error))
 					}
-					res.Fail(w, http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "")
+					res.Fail(w, http.StatusInternalServerError, "InternalServerError", "internal server error")
 				}
 			}()
 			next.ServeHTTP(w, r)
@@ -38,10 +38,10 @@ func JWTVerifier(ja *jwtauth.JWTAuth) func(http.Handler) http.Handler {
 			ja,
 			jwtauth.TokenFromHeader,
 			func(r *http.Request) string {
-				return r.Header.Get("x-access-token")
+				return r.URL.Query().Get("token")
 			},
 			func(r *http.Request) string {
-				return r.URL.Query().Get("token")
+				return r.Header.Get("x-access-token")
 			},
 		)(next)
 	}
