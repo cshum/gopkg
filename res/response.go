@@ -8,7 +8,7 @@ import (
 
 // JSON write json to http response writer
 func JSON(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Code", "application/json")
+	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(data)
 }
 
