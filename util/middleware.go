@@ -4,8 +4,6 @@ import (
 	"errors"
 	"github.com/cshum/gopkg/res"
 	"net/http"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -89,17 +87,11 @@ func AccessLogHandler(log func(string, ...zap.Field)) func(http.Handler) http.Ha
 
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
-func FileServer(r chi.Router, path string, dirname string) {
+func FileServer(r chi.Router, path, dirpath string) {
 	if strings.ContainsAny(path, "{}*") {
 		panic(errors.New("FileServer does not permit URL parameters"))
 	}
-	_, callerFileName, _, _ := runtime.Caller(1)
-	curr, err := filepath.Abs(filepath.Dir(callerFileName))
-	if err != nil {
-		panic(err)
-	}
-	filesDir := filepath.Join(curr, dirname)
-	fs := http.StripPrefix(path, http.FileServer(http.Dir(filesDir)))
+	fs := http.StripPrefix(path, http.FileServer(http.Dir(dirpath)))
 	if path != "/" && path[len(path)-1] != '/' {
 		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
 		path += "/"

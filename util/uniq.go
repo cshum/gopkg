@@ -1,7 +1,7 @@
-package unique
+package util
 
-// Ints returns a unique subset of the int slice provided.
-func Ints(input []int) []int {
+// UniqInts returns a unique subset of the int slice provided.
+func UniqInts(input []int) []int {
 	u := make([]int, 0, len(input))
 	m := map[int]bool{}
 	for _, val := range input {
@@ -13,8 +13,8 @@ func Ints(input []int) []int {
 	return u
 }
 
-// Ints returns a unique subset of the string slice provided.
-func Strings(input []string) []string {
+// UniqString returns a unique subset of the string slice provided.
+func UniqStrings(input []string) []string {
 	u := make([]string, 0, len(input))
 	m := map[string]bool{}
 	for _, val := range input {

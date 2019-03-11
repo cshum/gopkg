@@ -37,8 +37,8 @@ func Bool2Int8(b bool) int8 {
 	return 0
 }
 
-// CurrentDir current source file dir
-func CurrentDir() (string, error) {
+// CallerDir current caller abs file dir
+func CallerDir() (string, error) {
 	_, callerFileName, _, _ := runtime.Caller(1)
 	return filepath.Abs(filepath.Dir(callerFileName))
 }
