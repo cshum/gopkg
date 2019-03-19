@@ -1,7 +1,6 @@
-module gopkg
+module github.com/cshum/gopkg
 
 require (
-	github.com/cshum/gopkg v0.0.0-20190312022741-b34668fe115f
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/jwtauth v3.3.0+incompatible
