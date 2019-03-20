@@ -2,10 +2,15 @@ package basepath
 
 import (
 	"fmt"
+	"sync"
 	"testing"
 )
 
-func TestNew(t *testing.T) {
-	fmt.Println(New("../").Get())
-	fmt.Println(New("").Get())
+func TestBasePath(t *testing.T) {
+	fmt.Println(Get())
+	fmt.Println(Resolve("./test"))
+	once = sync.Once{}
+	Init("../")
+	fmt.Println(Get())
+	fmt.Println(Resolve("./test"))
 }
