@@ -12,7 +12,7 @@ var once sync.Once
 var basePath string
 
 // Init init base path from relative caller dir
-func Init(rel string) {
+func Init(elem ...string) {
 	once.Do(func() {
 		exeDir, err := osext.ExecutableFolder()
 		if err != nil {
@@ -29,19 +29,19 @@ func Init(rel string) {
 			if err != nil {
 				panic(err)
 			}
-			basePath = filepath.Join(callerDir, rel)
+			basePath = filepath.Join(append([]string{callerDir}, elem...)...)
 		}
 	})
 }
 
 // Get abs project base path
 func Get() string {
-	Init("./")
+	Init()
 	return basePath
 }
 
 // Resolve get abs path from project base
 func Resolve(path string) string {
-	Init("./")
+	Init()
 	return filepath.Join(basePath, path)
 }
