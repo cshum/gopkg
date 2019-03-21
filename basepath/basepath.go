@@ -2,14 +2,20 @@ package basepath
 
 import (
 	"github.com/kardianos/osext"
+	"io/ioutil"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
 )
 
+type OnFileLoadedHandler func(path string, isPreloaded bool)
+
 var once sync.Once
 var basePath string
+var fileMap = map[string][]byte{}
+var l = sync.RWMutex{}
+var onFileLoadedHandlers []OnFileLoadedHandler
 
 const stub = "!#"
 
@@ -52,4 +58,45 @@ func Get() string {
 func Resolve(path string) string {
 	Init(stub)
 	return filepath.Join(basePath, path)
+}
+
+func OnFileLoaded(fn OnFileLoadedHandler) {
+	l.Lock()
+	defer l.Unlock()
+	onFileLoadedHandlers = append(onFileLoadedHandlers, fn)
+}
+
+func LoadFile(path string) ([]byte, error) {
+	l.RLock()
+	defer l.RUnlock()
+	abspath := Resolve(path)
+	var result []byte
+	preloaded := false
+	if bytes, ok := fileMap[abspath]; ok {
+		result = bytes
+		preloaded = true
+	} else {
+		bytes, err := ioutil.ReadFile(abspath)
+		if err != nil {
+			return bytes, err
+		}
+		result = bytes
+	}
+	if onFileLoadedHandlers != nil {
+		for _, fn := range onFileLoadedHandlers {
+			fn(abspath, preloaded)
+		}
+	}
+	return result, nil
+}
+
+func LoadFileString(path string) (string, error) {
+	bytes, err := LoadFile(path)
+	return string(bytes), err
+}
+
+func PreloadFile(path string, data []byte) {
+	l.Lock()
+	defer l.Unlock()
+	fileMap[Resolve(path)] = data
 }
