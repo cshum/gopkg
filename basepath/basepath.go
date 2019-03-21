@@ -1,9 +1,9 @@
 package basepath
 
 import (
-	"github.com/cshum/gopkg/util"
 	"github.com/kardianos/osext"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 )
@@ -25,7 +25,8 @@ func Init(elem ...string) {
 		if strings.HasSuffix(basePath, "/exe") ||
 			strings.HasSuffix(basePath, "/T") {
 			// execute via go run or go test
-			callerDir, err := util.CallerDir()
+			_, callerFileName, _, _ := runtime.Caller(2)
+			callerDir, err := filepath.Abs(filepath.Dir(callerFileName))
 			if err != nil {
 				panic(err)
 			}
