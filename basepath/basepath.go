@@ -11,6 +11,8 @@ import (
 var once sync.Once
 var basePath string
 
+const stub = "!#"
+
 // Init init base path from relative caller dir
 func Init(elem ...string) {
 	once.Do(func() {
@@ -25,7 +27,12 @@ func Init(elem ...string) {
 		if strings.HasSuffix(basePath, "/exe") ||
 			strings.HasSuffix(basePath, "/T") {
 			// execute via go run or go test
-			_, callerFileName, _, _ := runtime.Caller(2)
+			skip := 3
+			if len(elem) == 1 && elem[0] == stub {
+				elem[0] = "./"
+				skip = 4
+			}
+			_, callerFileName, _, _ := runtime.Caller(skip)
 			callerDir, err := filepath.Abs(filepath.Dir(callerFileName))
 			if err != nil {
 				panic(err)
@@ -37,12 +44,12 @@ func Init(elem ...string) {
 
 // Get abs project base path
 func Get() string {
-	Init()
+	Init(stub)
 	return basePath
 }
 
 // Resolve get abs path from project base
 func Resolve(path string) string {
-	Init()
+	Init(stub)
 	return filepath.Join(basePath, path)
 }
