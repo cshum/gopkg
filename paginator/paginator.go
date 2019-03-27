@@ -3,8 +3,6 @@ package paginator
 import (
 	"errors"
 	"math"
-
-	"github.com/volatiletech/sqlboiler/queries/qm"
 )
 
 // Paginator for embedding pagination
@@ -52,20 +50,6 @@ func (p *Paginator) HasNext() bool {
 func (p *Paginator) SetCount(count int64) {
 	p.count = count
 	p.total = int(math.Ceil(float64(p.count) / float64(p.Size)))
-}
-
-// PaginatorMods for sqlboiler
-func (p *Paginator) PaginatorMods(q ...qm.QueryMod) []qm.QueryMod {
-	var query []qm.QueryMod
-	if len(q) > 0 {
-		query = append(query, q...)
-	}
-	query = append(
-		query,
-		qm.Offset(p.GetOffset()),
-		qm.Limit(p.GetLimit()),
-	)
-	return query
 }
 
 // Pagination for pagination json response
