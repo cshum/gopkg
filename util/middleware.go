@@ -16,7 +16,7 @@ import (
 )
 
 // RecoverHandler recovers from panic, log a sentry and response 500
-func RecoverHandler(handlers ...func(w http.ResponseWriter, r *http.Request, err error)) func(http.Handler) http.Handler {
+func RecoverHandler(handler func(w http.ResponseWriter, r *http.Request, err error)) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -25,9 +25,7 @@ func RecoverHandler(handlers ...func(w http.ResponseWriter, r *http.Request, err
 					if !ok {
 						err = errors.New(fmt.Sprintf("%v", rvr))
 					}
-					for _, handler := range handlers {
-						handler(w, r, err)
-					}
+					handler(w, r, err)
 				}
 			}()
 			next.ServeHTTP(w, r)
