@@ -15,7 +15,7 @@ func JSON(w http.ResponseWriter, data interface{}) {
 // Response standard response
 type Response struct {
 	Ok         bool                  `json:"ok"`
-	Status     int                   `json:"-"`
+	Status     int                   `json:"status"`
 	Data       interface{}           `json:"data,omitempty"`
 	Error      *ResponseError        `json:"error,omitempty"`
 	Pagination *paginator.Pagination `json:"pagination,omitempty"`

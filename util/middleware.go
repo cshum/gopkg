@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"github.com/cshum/gopkg/res"
 	"net/http"
 	"strings"
@@ -15,15 +16,16 @@ import (
 )
 
 // RecoverHandler recovers from panic, log a sentry and response 500
-func RecoverHandler(handlers ...func(error)) func(http.Handler) http.Handler {
+func RecoverHandler(handler func(w http.ResponseWriter, r *http.Request, err error)) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if rvr := recover(); rvr != nil {
-					for _, handler := range handlers {
-						handler(rvr.(error))
+					err, ok := rvr.(error)
+					if !ok {
+						err = errors.New(fmt.Sprintf("%v", rvr))
 					}
-					res.Fail(w, http.StatusInternalServerError, "InternalServerError", "internal server error")
+					handler(w, r, err)
 				}
 			}()
 			next.ServeHTTP(w, r)

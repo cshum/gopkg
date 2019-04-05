@@ -54,18 +54,18 @@ func (p *Paginator) SetCount(count int64) {
 
 // Pagination for pagination json response
 type Pagination struct {
-	HasNext     bool `json:"has_next"`
-	Total       int  `json:"total_pages"`
-	CurrentPage int  `json:"current_page"`
-	Size        int  `json:"size"`
+	HasNext bool `json:"has_next"`
+	Total   int  `json:"total"`
+	Current int  `json:"current"`
+	Size    int  `json:"size"`
 }
 
 // Pagination create struct from total results count
 func (p *Paginator) Pagination() *Pagination {
 	return &Pagination{
-		HasNext:     p.HasNext(),
-		Total:       p.total,
-		CurrentPage: p.Page,
-		Size:        p.Size,
+		HasNext: p.HasNext(),
+		Total:   p.total,
+		Current: p.Page,
+		Size:    p.Size,
 	}
 }
