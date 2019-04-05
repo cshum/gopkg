@@ -46,20 +46,24 @@ func AnyOfString(list ...string) string {
 	return ""
 }
 
-func PrintJSON(v interface{}) {
-	bytes, err := json.Marshal(v)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(string(bytes))
+func PrintJSON(vs ...interface{}) {
+	for _, v := range vs {
+		bytes, err := json.Marshal(v)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(string(bytes))
+		}
 	}
 }
 
-func PrintJSONIndent(v interface{}) {
-	bytes, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(string(bytes))
+func PrintJSONIndent(vs ...interface{}) {
+	for _, v := range vs {
+		bytes, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			fmt.Println(string(bytes))
+		}
 	}
 }
