@@ -1,6 +1,8 @@
 package util
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"runtime"
@@ -42,4 +44,22 @@ func AnyOfString(list ...string) string {
 		}
 	}
 	return ""
+}
+
+func PrintJSON(v interface{}) {
+	bytes, err := json.Marshal(v)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(bytes))
+	}
+}
+
+func PrintJSONIndent(v interface{}) {
+	bytes, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(string(bytes))
+	}
 }
