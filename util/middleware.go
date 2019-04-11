@@ -3,20 +3,20 @@ package util
 import (
 	"errors"
 	"fmt"
-	"github.com/cshum/gopkg/res"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/jwtauth"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-// RecoverHandler recovers from panic, log a sentry and response 500
-func RecoverHandler(handler func(w http.ResponseWriter, r *http.Request, err error)) func(http.Handler) http.Handler {
+// RecoverHandler recovers from panic, passes error to handler
+func RecoverHandler(
+	handler func(w http.ResponseWriter, r *http.Request, err error),
+) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
@@ -31,39 +31,6 @@ func RecoverHandler(handler func(w http.ResponseWriter, r *http.Request, err err
 			next.ServeHTTP(w, r)
 		})
 	}
-}
-
-// JWTVerifier verify jwt token
-func JWTVerifier(ja *jwtauth.JWTAuth) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return jwtauth.Verify(
-			ja,
-			jwtauth.TokenFromHeader,
-			func(r *http.Request) string {
-				return r.URL.Query().Get("token")
-			},
-			func(r *http.Request) string {
-				return r.Header.Get("x-access-token")
-			},
-		)(next)
-	}
-}
-
-// JWTAuth middleware of jwtauth with custom response
-func JWTAuth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token, _, err := jwtauth.FromContext(r.Context())
-		if err != nil {
-			res.FailUnauthorized(w, "unauthorized")
-			return
-		}
-		if token == nil || !token.Valid {
-			res.FailUnauthorized(w, "unauthorized")
-			return
-		}
-		// authorized
-		next.ServeHTTP(w, r)
-	})
 }
 
 // AccessLogHandler zap logger middleware
