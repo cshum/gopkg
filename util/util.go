@@ -14,11 +14,7 @@ import (
 
 // ParamInt parse int from chi URL param
 func ParamInt(r *http.Request, key string) (int, error) {
-	val, err := strconv.ParseInt(chi.URLParam(r, key), 10, 64)
-	if err != nil {
-		return 0, err
-	}
-	return int(val), nil
+	return strconv.Atoi(chi.URLParam(r, key))
 }
 
 // Bool2Int8 convert bool to int8
@@ -38,8 +34,7 @@ func CallerDir() (string, error) {
 // AnyOfString any of string
 func AnyOfString(list ...string) string {
 	for _, str := range list {
-		str = strings.TrimSpace(str)
-		if str != "" {
+		if str = strings.TrimSpace(str); str != "" {
 			return str
 		}
 	}
@@ -50,7 +45,7 @@ func PrintJSON(vs ...interface{}) {
 	for _, v := range vs {
 		bytes, err := json.Marshal(v)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("%v\n", err)
 		} else {
 			fmt.Println(string(bytes))
 		}
@@ -61,7 +56,7 @@ func PrintJSONIndent(vs ...interface{}) {
 	for _, v := range vs {
 		bytes, err := json.MarshalIndent(v, "", "  ")
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("%v\n", err)
 		} else {
 			fmt.Println(string(bytes))
 		}

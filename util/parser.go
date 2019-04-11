@@ -23,12 +23,10 @@ func init() {
 
 // ParseQuery decode req query and validate struct from string map
 func ParseQuery(r *http.Request, dst interface{}) error {
-	err := decoder.Decode(dst, r.URL.Query())
-	if err != nil {
+	if err := decoder.Decode(dst, r.URL.Query()); err != nil {
 		return err
 	}
-	err = validate.Struct(dst)
-	if err != nil {
+	if err := validate.Struct(dst); err != nil {
 		return err.(validator.ValidationErrors)
 	}
 	return nil
