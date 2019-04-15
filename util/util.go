@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -61,4 +62,16 @@ func PrintJSONIndent(vs ...interface{}) {
 			fmt.Println(string(bytes))
 		}
 	}
+}
+
+func ResolveURL(prefix, path string) (string, error) {
+	u, err := url.Parse(prefix)
+	if err != nil {
+		return "", err
+	}
+	p, err := url.Parse(path)
+	if err != nil {
+		return "", err
+	}
+	return u.ResolveReference(p).String(), nil
 }
