@@ -3,20 +3,11 @@ package util
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
-
-	"github.com/go-chi/chi"
 )
-
-// ParamInt parse int from chi URL param
-func ParamInt(r *http.Request, key string) (int, error) {
-	return strconv.Atoi(chi.URLParam(r, key))
-}
 
 // Bool2Int8 convert bool to int8
 func Bool2Int8(b bool) int8 {
