@@ -7,7 +7,7 @@ import (
 	"github.com/olivere/elastic"
 )
 
-type Middleware func(p *Search)
+type Middleware func(s *Search)
 type QueryHandler func(ctx context.Context, q *elastic.BoolQuery) error
 type FunctionScoreHandler func(ctx context.Context, q *elastic.FunctionScoreQuery) error
 type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
