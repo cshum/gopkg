@@ -14,13 +14,14 @@ type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
 type ResultHandler func(ctx context.Context, result *elastic.SearchResult) error
 
 type Search struct {
-	Client   *elastic.Client
-	indices  []string
-	queries  []QueryHandler
-	fnscores []FunctionScoreHandler
-	sources  []SourceHandler
-	sorters  []elastic.Sorter
-	results  []ResultHandler
+	Client      *elastic.Client
+	skipfnscore bool
+	indices     []string
+	queries     []QueryHandler
+	fnscores    []FunctionScoreHandler
+	sources     []SourceHandler
+	sorters     []elastic.Sorter
+	results     []ResultHandler
 }
 
 func NewSearch(es *elastic.Client, indices ...string) *Search {
@@ -69,6 +70,11 @@ func (q *Search) Use(fn Middleware) *Search {
 	return q
 }
 
+func (q *Search) SkipFunctionScore() *Search {
+	q.skipfnscore = true
+	return q
+}
+
 func (q *Search) DoSource(
 	ctx context.Context, p *paginator.Paginator,
 ) (*elastic.SearchSource, error) {
@@ -81,7 +87,7 @@ func (q *Search) DoSource(
 		}
 	}
 	s := elastic.NewSearchSource()
-	if p != nil && len(q.fnscores) > 0 {
+	if p != nil && !q.skipfnscore && len(q.fnscores) > 0 {
 		fsq := elastic.NewFunctionScoreQuery().
 			BoostMode("replace").
 			Query(bq)
