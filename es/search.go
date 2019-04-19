@@ -137,7 +137,11 @@ func (q *Search) Do(
 		return result, err
 	}
 	if p != nil {
-		p.SetCount(result.TotalHits())
+		if cnt := result.TotalHits(); cnt <= 10000 {
+			p.SetCount(cnt)
+		} else {
+			p.SetCount(10000)
+		}
 	}
 	if q.results != nil {
 		for _, res := range q.results {
