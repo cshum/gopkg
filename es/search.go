@@ -100,10 +100,10 @@ func (q *Search) DoSource(
 	} else {
 		s.Query(bq)
 	}
-	if len(q.sorters) > 0 {
-		s.SortBy(q.sorters...)
-	}
 	if p != nil {
+		if len(q.sorters) > 0 {
+			s.SortBy(q.sorters...)
+		}
 		if p.GetOffset()+p.GetLimit() >= 10000 {
 			return nil, errors.New("page exceeded maximum")
 		}
