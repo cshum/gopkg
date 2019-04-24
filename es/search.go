@@ -12,10 +12,13 @@ type QueryHandler func(ctx context.Context, q *elastic.BoolQuery) error
 type FunctionScoreHandler func(ctx context.Context, q *elastic.FunctionScoreQuery) error
 type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
 type ResultHandler func(ctx context.Context, result *elastic.SearchResult) error
+type RequestFunc func(
+	ctx context.Context, source *elastic.SearchSource, indices []string,
+) (*elastic.SearchResult, error)
 
 type Search struct {
-	Client  *elastic.Client
 	Indices []string
+	Request RequestFunc
 
 	skipfnscore bool
 	queries     []QueryHandler
@@ -25,8 +28,17 @@ type Search struct {
 	results     []ResultHandler
 }
 
-func NewSearch(es *elastic.Client, indices ...string) *Search {
-	return &Search{Client: es, Indices: indices}
+func NewSearch(client *elastic.Client, indices ...string) *Search {
+	return &Search{
+		Indices: indices,
+		Request: func(
+			ctx context.Context,
+			source *elastic.SearchSource,
+			indices []string,
+		) (*elastic.SearchResult, error) {
+			return client.Search(indices...).SearchSource(source).Do(ctx)
+		},
+	}
 }
 
 func (q *Search) Index(indices ...string) *Search {
@@ -55,10 +67,6 @@ func (q *Search) HandleFunctionScore(fn FunctionScoreHandler) *Search {
 func (q *Search) HandleSource(fn SourceHandler) *Search {
 	q.sources = append(q.sources, fn)
 	return q
-}
-
-func (q *Search) New(indices ...string) *Search {
-	return NewSearch(q.Client, indices...)
 }
 
 func (q *Search) HandleResult(fn ResultHandler) *Search {
@@ -130,10 +138,7 @@ func (q *Search) Do(
 	if err != nil {
 		return nil, err
 	}
-	result, err := q.Client.
-		Search(q.Indices...).
-		SearchSource(source).
-		Do(ctx)
+	result, err := q.Request(ctx, source, q.Indices)
 	if err != nil {
 		return result, err
 	}
