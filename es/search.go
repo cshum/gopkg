@@ -14,10 +14,9 @@ type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
 type ResultHandler func(ctx context.Context, result *elastic.SearchResult) error
 
 type Search struct {
-	Client  *elastic.Client
-	Indices []string
-
+	Client      *elastic.Client
 	skipfnscore bool
+	indices     []string
 	queries     []QueryHandler
 	fnscores    []FunctionScoreHandler
 	sources     []SourceHandler
@@ -26,11 +25,11 @@ type Search struct {
 }
 
 func NewSearch(es *elastic.Client, indices ...string) *Search {
-	return &Search{Client: es, Indices: indices}
+	return &Search{Client: es, indices: indices}
 }
 
 func (q *Search) Index(indices ...string) *Search {
-	q.Indices = append(q.Indices, indices...)
+	q.indices = append(q.indices, indices...)
 	return q
 }
 
@@ -123,10 +122,20 @@ func (q *Search) DoSource(
 	return s, nil
 }
 
-func (q *Search) DoResult(
+func (q *Search) Do(
 	ctx context.Context, p *paginator.Paginator,
-	result *elastic.SearchResult,
-) error {
+) (*elastic.SearchResult, error) {
+	ss, err := q.DoSource(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	result, err := q.Client.
+		Search(q.indices...).
+		SearchSource(ss).
+		Do(ctx)
+	if err != nil {
+		return result, err
+	}
 	if p != nil {
 		if cnt := result.TotalHits(); cnt <= 10000 {
 			p.SetCount(cnt)
@@ -137,29 +146,9 @@ func (q *Search) DoResult(
 	if q.results != nil {
 		for _, res := range q.results {
 			if err := res(ctx, result); err != nil {
-				return err
+				return result, err
 			}
 		}
-	}
-	return nil
-}
-
-func (q *Search) Do(
-	ctx context.Context, p *paginator.Paginator,
-) (*elastic.SearchResult, error) {
-	source, err := q.DoSource(ctx, p)
-	if err != nil {
-		return nil, err
-	}
-	result, err := q.Client.
-		Search(q.Indices...).
-		SearchSource(source).
-		Do(ctx)
-	if err != nil {
-		return result, err
-	}
-	if err := q.DoResult(ctx, p, result); err != nil {
-		return result, err
 	}
 	return result, nil
 }
