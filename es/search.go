@@ -14,9 +14,10 @@ type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
 type ResultHandler func(ctx context.Context, result *elastic.SearchResult) error
 
 type Search struct {
-	Client      *elastic.Client
+	Client  *elastic.Client
+	Indices []string
+
 	skipfnscore bool
-	indices     []string
 	queries     []QueryHandler
 	fnscores    []FunctionScoreHandler
 	sources     []SourceHandler
@@ -25,11 +26,11 @@ type Search struct {
 }
 
 func NewSearch(es *elastic.Client, indices ...string) *Search {
-	return &Search{Client: es, indices: indices}
+	return &Search{Client: es, Indices: indices}
 }
 
 func (q *Search) Index(indices ...string) *Search {
-	q.indices = append(q.indices, indices...)
+	q.Indices = append(q.Indices, indices...)
 	return q
 }
 
@@ -125,13 +126,13 @@ func (q *Search) DoSource(
 func (q *Search) Do(
 	ctx context.Context, p *paginator.Paginator,
 ) (*elastic.SearchResult, error) {
-	ss, err := q.DoSource(ctx, p)
+	source, err := q.DoSource(ctx, p)
 	if err != nil {
 		return nil, err
 	}
 	result, err := q.Client.
-		Search(q.indices...).
-		SearchSource(ss).
+		Search(q.Indices...).
+		SearchSource(source).
 		Do(ctx)
 	if err != nil {
 		return result, err
