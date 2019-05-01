@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // Bool2Int8 convert bool to int8
@@ -65,4 +66,12 @@ func ResolveURL(prefix, path string) (string, error) {
 		return "", err
 	}
 	return u.ResolveReference(p).String(), nil
+}
+
+func Timestamp() int64 {
+	return ToTimestamp(time.Now())
+}
+
+func ToTimestamp(t time.Time) int64 {
+	return t.UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 }
