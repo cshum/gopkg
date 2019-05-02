@@ -12,13 +12,24 @@ type QueryHandler func(ctx context.Context, q *elastic.BoolQuery) error
 type FunctionScoreHandler func(ctx context.Context, q *elastic.FunctionScoreQuery) error
 type SourceHandler func(ctx context.Context, s *elastic.SearchSource) error
 type ResultHandler func(ctx context.Context, result *elastic.SearchResult) error
-type RequestFunc func(
-	ctx context.Context, source *elastic.SearchSource, indices []string,
-) (*elastic.SearchResult, error)
+
+type Request interface {
+	Do(ctx context.Context, indices []string, source *elastic.SearchSource) (*elastic.SearchResult, error)
+}
+
+type SearchRequest struct {
+	Client *elastic.Client
+}
+
+func (r *SearchRequest) Do(
+	ctx context.Context, indices []string, source *elastic.SearchSource,
+) (*elastic.SearchResult, error) {
+	return r.Client.Search(indices...).SearchSource(source).Do(ctx)
+}
 
 type Search struct {
 	Indices []string
-	Request RequestFunc
+	Request Request
 
 	skipfnscore bool
 	queries     []QueryHandler
@@ -31,13 +42,7 @@ type Search struct {
 func NewSearch(client *elastic.Client, indices ...string) *Search {
 	return &Search{
 		Indices: indices,
-		Request: func(
-			ctx context.Context,
-			source *elastic.SearchSource,
-			indices []string,
-		) (*elastic.SearchResult, error) {
-			return client.Search(indices...).SearchSource(source).Do(ctx)
-		},
+		Request: &SearchRequest{Client: client},
 	}
 }
 
@@ -138,7 +143,7 @@ func (q *Search) Do(
 	if err != nil {
 		return nil, err
 	}
-	result, err := q.Request(ctx, source, q.Indices)
+	result, err := q.Request.Do(ctx, q.Indices, source)
 	if err != nil {
 		return result, err
 	}
