@@ -30,8 +30,8 @@ type SearchCache struct {
 
 func (r *CachedRequest) Do(
 	ctx context.Context,
-	source *elastic.SearchSource,
 	indices []string,
+	source *elastic.SearchSource,
 ) (*elastic.SearchResult, error) {
 	key, err := SearchCacheKey(indices, source)
 	if err != nil {
