@@ -39,7 +39,7 @@ func (r *CachedRequest) Do(
 	}
 	if cached, ts := r.getSearchCache(key); cached != nil {
 		elasped := time.Millisecond * time.Duration(util.Timestamp()-ts)
-		if elasped >= r.Refresh {
+		if r.Refresh > 0 && elasped >= r.Refresh {
 			go func() {
 				if result, err := r.Elastic.Search(indices...).
 					SearchSource(source).Do(context.Background()); err == nil {
