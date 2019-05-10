@@ -2,8 +2,6 @@ package es
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"github.com/cshum/gopkg/util"
 	"github.com/go-redis/redis"
@@ -93,11 +91,10 @@ func SearchCacheKey(indices []string, source *elastic.SearchSource) (string, err
 	if err != nil {
 		return "", err
 	}
-	bytes, err := json.Marshal(src)
+	hash, err := util.ToHash(src)
 	if err != nil {
 		return "", err
 	}
-	hash := md5.Sum(bytes)
-	key := "!es!" + strings.Join(indices, ",") + "!" + hex.EncodeToString(hash[:])
+	key := "!es!" + strings.Join(indices, ",") + "!" + hash
 	return key, nil
 }
