@@ -17,6 +17,7 @@ import (
 type CachedRequest struct {
 	Elastic    *elastic.Client
 	Redis      *redis.Client
+	Key        string
 	Threshold  time.Duration
 	Refresh    time.Duration
 	Expiration time.Duration
@@ -33,17 +34,20 @@ func (r *CachedRequest) Do(
 	indices []string,
 	source *elastic.SearchSource,
 ) (*elastic.SearchResult, error) {
-	key, err := SearchCacheKey(indices, source)
-	if err != nil {
-		return nil, err
+	if r.Key == "" {
+		key, err := SearchCacheKey(indices, source)
+		if err != nil {
+			return nil, err
+		}
+		r.Key = key
 	}
-	if cached, ts := r.getSearchCache(key); cached != nil {
+	if cached, ts := r.getSearchCache(r.Key); cached != nil {
 		elasped := time.Millisecond * time.Duration(util.Timestamp()-ts)
 		if r.Refresh > 0 && elasped >= r.Refresh {
 			go func() {
 				if result, err := r.Elastic.Search(indices...).
 					SearchSource(source).Do(context.Background()); err == nil {
-					r.setSearchCache(key, result)
+					r.setSearchCache(r.Key, result)
 				}
 			}()
 		}
@@ -51,7 +55,7 @@ func (r *CachedRequest) Do(
 	}
 	result, err := r.Elastic.Search(indices...).SearchSource(source).Do(ctx)
 	if err == nil && result.TookInMillis > int64(r.Threshold/time.Millisecond) {
-		go r.setSearchCache(key, result)
+		go r.setSearchCache(r.Key, result)
 	}
 	return result, err
 }
