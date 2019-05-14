@@ -4,8 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/cshum/gopkg/paginator"
+	"github.com/cshum/gopkg/util"
 	"github.com/olivere/elastic"
 )
+
+var DebugMode = false
 
 type Middleware func(s *Search)
 type QueryHandler func(ctx context.Context, q *elastic.BoolQuery) error
@@ -146,6 +149,10 @@ func (q *Search) Do(
 	result, err := q.Request.Do(ctx, q.Indices, source)
 	if err != nil {
 		return result, err
+	}
+	if DebugMode {
+		s, _ := source.Source()
+		util.PrintJSON(s)
 	}
 	if p != nil {
 		if cnt := result.TotalHits(); cnt <= 10000 {
