@@ -13,7 +13,6 @@ type Paginator struct {
 	pagecount int
 }
 
-// New create Paginator of page size
 func New(size int) *Paginator {
 	if size < 1 {
 		panic(errors.New("size must be non-zero positive integer"))
@@ -21,38 +20,48 @@ func New(size int) *Paginator {
 	return &Paginator{Page: 1, Size: size}
 }
 
-// GetOffset calculate paginate offset
-func (p *Paginator) GetOffset() int {
-	return (p.Page - 1) * p.Size
+func (p *Paginator) GetOffset() int64 {
+	return int64(p.Page-1) * int64(p.Size)
 }
 
-// GetLimit calculate paginate limit
+func (p *Paginator) GetFrom() int64 {
+	return p.GetOffset()
+}
+
+func (p *Paginator) GetTo() int64 {
+	return p.GetOffset() + int64(p.Size)
+}
+
 func (p *Paginator) GetLimit() int {
 	return p.Size
 }
 
-// GetItemCount result item count
 func (p *Paginator) GetItemCount() int64 {
 	return p.itemcount
 }
 
-// GetPageCount pagecount page
 func (p *Paginator) GetPageCount() int {
 	return p.pagecount
 }
 
-// HasNext has next page
 func (p *Paginator) HasNext() bool {
 	return p.pagecount >= p.Page+1
 }
 
-// SetItemCount set result item count
+func (p *Paginator) Next() bool {
+	if !p.HasNext() {
+		return false
+	}
+	p.Page++
+	return true
+}
+
 func (p *Paginator) SetItemCount(count int64) {
 	p.itemcount = count
 	p.pagecount = int(math.Ceil(float64(p.itemcount) / float64(p.Size)))
 }
 
-// Pagination for pagination json response
+// Pagination for json response
 type Pagination struct {
 	HasNext   bool  `json:"has_next"`
 	ItemCount int64 `json:"item_count"`
