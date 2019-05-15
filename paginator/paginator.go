@@ -20,16 +20,16 @@ func New(size int) *Paginator {
 	return &Paginator{Page: 1, Size: size}
 }
 
-func (p *Paginator) GetOffset() int64 {
-	return int64(p.Page-1) * int64(p.Size)
+func (p *Paginator) GetOffset() int {
+	return (p.Page - 1) * p.Size
 }
 
-func (p *Paginator) GetFrom() int64 {
+func (p *Paginator) GetFrom() int {
 	return p.GetOffset()
 }
 
-func (p *Paginator) GetTo() int64 {
-	return p.GetOffset() + int64(p.Size)
+func (p *Paginator) GetTo() int {
+	return p.GetOffset() + p.Size
 }
 
 func (p *Paginator) GetLimit() int {
