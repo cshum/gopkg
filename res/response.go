@@ -4,13 +4,19 @@ import (
 	"encoding/json"
 	"github.com/cshum/gopkg/paginator"
 	"net/http"
+	"strconv"
 )
 
 // JSON write json to http response writer
 func JSON(w http.ResponseWriter, data interface{}) {
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Length", strconv.Itoa(len(bytes)))
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(data)
+	_, _ = w.Write(bytes)
 }
 
 // Response standard response
