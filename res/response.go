@@ -8,14 +8,14 @@ import (
 )
 
 // JSON write json to http response writer
-func JSON(w http.ResponseWriter, data interface{}) {
+func JSON(w http.ResponseWriter, status int, data interface{}) {
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Length", strconv.Itoa(len(bytes)))
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	_, _ = w.Write(bytes)
 }
 
@@ -41,7 +41,7 @@ func Success(w http.ResponseWriter, data interface{}) {
 
 // SuccessPaginated response
 func SuccessPaginated(w http.ResponseWriter, data interface{}, p *paginator.Pagination) {
-	JSON(w, Response{
+	JSON(w, http.StatusOK, Response{
 		Status:     http.StatusOK,
 		Ok:         true,
 		Data:       data,
@@ -51,8 +51,7 @@ func SuccessPaginated(w http.ResponseWriter, data interface{}, p *paginator.Pagi
 
 // Fail response
 func Fail(w http.ResponseWriter, status int, code string, message string) {
-	w.WriteHeader(status)
-	JSON(w, Response{
+	JSON(w, status, Response{
 		Status: status,
 		Ok:     false,
 		Error: &ResponseError{
