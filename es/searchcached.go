@@ -12,9 +12,29 @@ import (
 	"time"
 )
 
+type Cache interface {
+	Get(key string) ([]byte, error)
+	Set(key string, value []byte, ttl time.Duration) error
+}
+
+type RedisCache struct {
+	Client *redis.Client
+}
+
+func (r *RedisCache) Get(key string) ([]byte, error) {
+	res, err := r.Client.Get(key).Result()
+	return []byte(res), err
+}
+
+func (r *RedisCache) Set(key string, value []byte, ttl time.Duration) error {
+	_, err := r.Client.Set(key, value, ttl).Result()
+	return err
+}
+
 type CachedRequest struct {
 	Elastic    *elastic.Client
-	Redis      *redis.Client
+	Cache      Cache
+	Prefix     string
 	Key        string
 	Threshold  time.Duration
 	Refresh    time.Duration
@@ -22,7 +42,7 @@ type CachedRequest struct {
 	Logger     *zap.Logger
 }
 
-type SearchCache struct {
+type CachedPayload struct {
 	Timestamp int64                 `json:"ts"`
 	Result    *elastic.SearchResult `json:"res"`
 }
@@ -37,7 +57,7 @@ func (r *CachedRequest) Do(
 		if err != nil {
 			return nil, err
 		}
-		r.Key = key
+		r.Key = r.Prefix + key
 	}
 	if cached, ts := r.getSearchCache(r.Key); cached != nil {
 		elasped := time.Millisecond * time.Duration(util.Timestamp()-ts)
@@ -59,10 +79,10 @@ func (r *CachedRequest) Do(
 }
 
 func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult) {
-	if val, err := json.Marshal(&SearchCache{
+	if val, err := json.Marshal(&CachedPayload{
 		util.Timestamp(), result,
 	}); err == nil {
-		if _, err := r.Redis.Set(key, val, r.Expiration).Result(); err != nil && r.Logger != nil {
+		if err := r.Cache.Set(key, val, r.Expiration); err != nil && r.Logger != nil {
 			r.Logger.Error("redis", zap.Error(err))
 		}
 	}
@@ -74,9 +94,9 @@ func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult)
 }
 
 func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64) {
-	if val, err := r.Redis.Get(key).Result(); err == nil {
-		cached := &SearchCache{}
-		if err := json.Unmarshal([]byte(val), cached); err == nil {
+	if val, err := r.Cache.Get(key); err == nil {
+		cached := &CachedPayload{}
+		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
 		} else if err != redis.Nil && r.Logger != nil {
 			r.Logger.Error("redis", zap.Error(err))
