@@ -94,7 +94,7 @@ func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult)
 }
 
 func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64) {
-	if val, err := r.Cache.Get(key); err == nil {
+	if val, err := r.Cache.Get(key); err == nil && len(val) > 0 {
 		cached := &CachedPayload{}
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
