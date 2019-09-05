@@ -1,12 +1,14 @@
 package res
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/go-chi/chi"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi"
 
 	"github.com/gorilla/schema"
 	validator "gopkg.in/go-playground/validator.v9"
@@ -34,7 +36,7 @@ func ParseQuery(r *http.Request, dst interface{}) error {
 		return err
 	}
 	if err := validate.Struct(dst); err != nil {
-		return err.(validator.ValidationErrors)
+		return err
 	}
 	return nil
 }
@@ -47,23 +49,21 @@ func ParseBody(r *http.Request, dst interface{}) error {
 		if err != nil {
 			return err
 		}
-		err = json.Unmarshal(body, &dst)
-		if err != nil {
+		if err = json.Unmarshal(body, dst); err != nil {
 			return err
 		}
+		// restore body state
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	} else {
-		err := r.ParseForm()
-		if err != nil {
+		if err := r.ParseForm(); err != nil {
 			return err
 		}
-		err = decoder.Decode(dst, r.PostForm)
-		if err != nil {
+		if err := decoder.Decode(dst, r.PostForm); err != nil {
 			return err
 		}
 	}
-	err := validate.Struct(dst)
-	if err != nil {
-		return err.(validator.ValidationErrors)
+	if err := validate.Struct(dst); err != nil {
+		return err
 	}
 	return nil
 }
