@@ -13,7 +13,7 @@ type Hybrid struct {
 	maxLocalTTL time.Duration
 }
 
-func New(client *redis.Client, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
+func NewHybrid(client *redis.Client, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
 	return &Hybrid{
 		Redis:       client,
 		Local:       cache.New(maxLocalTTL, cleanupInterval),

@@ -6,6 +6,12 @@ import (
 	"github.com/go-redis/redis"
 )
 
+func NewRedis(client *redis.Client) *Redis {
+	return &Redis{
+		Client: client,
+	}
+}
+
 type Redis struct {
 	Client *redis.Client
 }
