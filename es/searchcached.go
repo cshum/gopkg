@@ -3,37 +3,20 @@ package es
 import (
 	"context"
 	"encoding/json"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/cshum/gopkg/cache"
 	"github.com/cshum/gopkg/util"
 	"github.com/go-redis/redis"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
-	"sort"
-	"strings"
-	"time"
 )
-
-type Cache interface {
-	Get(key string) ([]byte, error)
-	Set(key string, value []byte, ttl time.Duration) error
-}
-
-type RedisCache struct {
-	Client *redis.Client
-}
-
-func (r *RedisCache) Get(key string) ([]byte, error) {
-	res, err := r.Client.Get(key).Result()
-	return []byte(res), err
-}
-
-func (r *RedisCache) Set(key string, value []byte, ttl time.Duration) error {
-	_, err := r.Client.Set(key, value, ttl).Result()
-	return err
-}
 
 type CachedRequest struct {
 	Elastic    *elastic.Client
-	Cache      Cache
+	Cache      cache.Cache
 	Prefix     string
 	Key        string
 	Threshold  time.Duration
