@@ -6,10 +6,9 @@ import (
 )
 
 type Error struct {
-	Code    string                 `json:"code,omitempty"`
-	Message string                 `json:"message,omitempty"`
-	Status  int                    `json:"status"`
-	Extra   map[string]interface{} `json:"extra"`
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+	Status  int    `json:"status"`
 }
 
 func (e *Error) Error() string {
