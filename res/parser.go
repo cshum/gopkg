@@ -41,12 +41,10 @@ func ParseQuery(r *http.Request, dst interface{}) error {
 	return nil
 }
 
-const maxMemory = int64(10 << 20) // 10mb
-
 // ParseBody decode req body and validate struct from string map
-func ParseBody(r *http.Request, dst interface{}) error {
-	if isBodyJSON(r) {
-		reader := io.LimitReader(r.Body, maxMemory) // 10MB
+func ParseBody(r *http.Request, dst interface{}, maxMemory int64) error {
+	if IsBodyJSON(r) {
+		reader := io.LimitReader(r.Body, maxMemory)
 		body, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return err
@@ -70,7 +68,7 @@ func ParseBody(r *http.Request, dst interface{}) error {
 	return nil
 }
 
-func isBodyJSON(r *http.Request) bool {
+func IsBodyJSON(r *http.Request) bool {
 	if r.Header.Get("Content-Type") != "application/json" {
 		return false
 	}
