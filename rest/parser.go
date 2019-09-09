@@ -1,4 +1,4 @@
-package res
+package rest
 
 import (
 	"bytes"
@@ -11,23 +11,25 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/gorilla/schema"
-	validator "gopkg.in/go-playground/validator.v9"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 var decoder *schema.Decoder
-var validate *validator.Validate
+var Validate *validator.Validate
 
 func init() {
 	// schema decoder
 	decoder = schema.NewDecoder()
 	decoder.SetAliasTag("json")
 	decoder.IgnoreUnknownKeys(true)
-	validate = validator.New()
+	// validator
+	Validate = validator.New()
 }
 
 // ParamInt parse int from chi URL param
-func ParamInt(r *http.Request, key string) (int, error) {
-	return strconv.Atoi(chi.URLParam(r, key))
+func ParamInt(r *http.Request, key string) int {
+	id, _ := strconv.Atoi(chi.URLParam(r, key))
+	return id
 }
 
 // ParseQuery decode req query and validate struct from string map
@@ -35,7 +37,7 @@ func ParseQuery(r *http.Request, dst interface{}) error {
 	if err := decoder.Decode(dst, r.URL.Query()); err != nil {
 		return err
 	}
-	if err := validate.Struct(dst); err != nil {
+	if err := Validate.Struct(dst); err != nil {
 		return err
 	}
 	return nil
@@ -62,7 +64,7 @@ func ParseBody(r *http.Request, dst interface{}, maxMemory int64) error {
 			return err
 		}
 	}
-	if err := validate.Struct(dst); err != nil {
+	if err := Validate.Struct(dst); err != nil {
 		return err
 	}
 	return nil

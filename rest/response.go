@@ -1,10 +1,11 @@
-package res
+package rest
 
 import (
 	"encoding/json"
-	"github.com/cshum/gopkg/paginator"
 	"net/http"
 	"strconv"
+
+	"github.com/cshum/gopkg/paginator"
 )
 
 // JSON write json to http response writer
