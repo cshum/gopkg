@@ -41,10 +41,12 @@ func ParseQuery(r *http.Request, dst interface{}) error {
 	return nil
 }
 
+const maxMemory = int64(10 << 20) // 10mb
+
 // ParseBody decode req body and validate struct from string map
 func ParseBody(r *http.Request, dst interface{}) error {
 	if isBodyJSON(r) {
-		reader := io.LimitReader(r.Body, int64(10<<20)) // 10MB
+		reader := io.LimitReader(r.Body, maxMemory) // 10MB
 		body, err := ioutil.ReadAll(reader)
 		if err != nil {
 			return err
@@ -55,7 +57,7 @@ func ParseBody(r *http.Request, dst interface{}) error {
 		// restore body state
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	} else {
-		if err := r.ParseForm(); err != nil {
+		if err := r.ParseMultipartForm(maxMemory); err != nil && err != http.ErrNotMultipart {
 			return err
 		}
 		if err := decoder.Decode(dst, r.PostForm); err != nil {
