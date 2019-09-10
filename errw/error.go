@@ -48,6 +48,14 @@ func Timeout(message string) *Error {
 	}
 }
 
+func InternalServer(message string) *Error {
+	return &Error{
+		Code:    "InternalServerError",
+		Status:  http.StatusInternalServerError,
+		Message: message,
+	}
+}
+
 func ValidateField(field, reason string) *Error {
 	return &Error{
 		Code:    "ValidateError",
