@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cshum/gopkg/errw"
 	"github.com/cshum/gopkg/paginator"
 )
 
@@ -22,17 +23,11 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 
 // Response standard response
 type Response struct {
-	Ok         bool                  `json:"ok"`
+	Success    bool                  `json:"success"`
 	Status     int                   `json:"status"`
 	Data       interface{}           `json:"data,omitempty"`
-	Error      *ResponseError        `json:"error,omitempty"`
+	Error      *errw.Error           `json:"error,omitempty"`
 	Pagination *paginator.Pagination `json:"pagination,omitempty"`
-}
-
-// ResponseError standard response error object
-type ResponseError struct {
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message,omitempty"`
 }
 
 // Success response
@@ -44,7 +39,7 @@ func Success(w http.ResponseWriter, data interface{}) {
 func SuccessPaginated(w http.ResponseWriter, data interface{}, p *paginator.Pagination) {
 	JSON(w, http.StatusOK, Response{
 		Status:     http.StatusOK,
-		Ok:         true,
+		Success:    true,
 		Data:       data,
 		Pagination: p,
 	})
@@ -53,9 +48,9 @@ func SuccessPaginated(w http.ResponseWriter, data interface{}, p *paginator.Pagi
 // Fail response
 func Fail(w http.ResponseWriter, status int, code string, message string) {
 	JSON(w, status, Response{
-		Status: status,
-		Ok:     false,
-		Error: &ResponseError{
+		Status:  status,
+		Success: false,
+		Error: &errw.Error{
 			Code:    code,
 			Message: message,
 		},

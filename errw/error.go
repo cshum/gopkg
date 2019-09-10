@@ -8,7 +8,7 @@ import (
 type Error struct {
 	Code    string                 `json:"code"`
 	Message string                 `json:"message"`
-	Status  int                    `json:"status"`
+	Status  int                    `json:"-"`
 	Extra   map[string]interface{} `json:"extra,omitempty"`
 }
 
@@ -44,7 +44,7 @@ func ValidateField(field, reason string) error {
 	return &Error{
 		Code:    "ValidateError",
 		Status:  http.StatusBadRequest,
-		Message: fmt.Sprintf("%s %s", field, reason),
+		Message: field + " " + reason,
 		Extra: map[string]interface{}{
 			"field":  field,
 			"reason": reason,
