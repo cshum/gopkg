@@ -7,8 +7,8 @@ import (
 
 type Error struct {
 	Code    string                 `json:"code"`
-	Message string                 `json:"message"`
 	Status  int                    `json:"-"`
+	Message string                 `json:"message"`
 	Extra   map[string]interface{} `json:"extra,omitempty"`
 }
 
@@ -16,7 +16,7 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
 }
 
-func NotFound(message string) error {
+func NotFound(message string) *Error {
 	return &Error{
 		Code:    "NotFoundError",
 		Status:  http.StatusNotFound,
@@ -24,7 +24,7 @@ func NotFound(message string) error {
 	}
 }
 
-func Unauthorized(message string) error {
+func Unauthorized(message string) *Error {
 	return &Error{
 		Code:    "UnauthorizedError",
 		Status:  http.StatusUnauthorized,
@@ -32,7 +32,7 @@ func Unauthorized(message string) error {
 	}
 }
 
-func Validate(message string) error {
+func Validate(message string) *Error {
 	return &Error{
 		Code:    "ValidateError",
 		Status:  http.StatusBadRequest,
@@ -40,7 +40,15 @@ func Validate(message string) error {
 	}
 }
 
-func ValidateField(field, reason string) error {
+func Timeout(message string) *Error {
+	return &Error{
+		Code:    "TimeoutError",
+		Status:  http.StatusRequestTimeout,
+		Message: message,
+	}
+}
+
+func ValidateField(field, reason string) *Error {
 	return &Error{
 		Code:    "ValidateError",
 		Status:  http.StatusBadRequest,
