@@ -7,6 +7,7 @@ import (
 
 	"github.com/cshum/gopkg/errw"
 	"github.com/cshum/gopkg/paginator"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 // JSON write json to http response writer
@@ -45,34 +46,49 @@ func SuccessPaginated(w http.ResponseWriter, data interface{}, p *paginator.Pagi
 	})
 }
 
-// Fail response
-func Fail(w http.ResponseWriter, status int, code string, message string) {
-	JSON(w, status, Response{
-		Status:  status,
+func FailW(w http.ResponseWriter, err *errw.Error) {
+	JSON(w, err.Status, Response{
+		Status:  err.Status,
 		Success: false,
-		Error: &errw.Error{
-			Code:    code,
-			Message: message,
-		},
+		Error:   err,
 	})
 }
 
-// FailOk fail response status ok
-func FailOk(w http.ResponseWriter, code string, message string) {
-	Fail(w, http.StatusOK, code, message)
+func Fail(w http.ResponseWriter, err error) {
+	// errw
+	if err, ok := err.(*errw.Error); ok {
+		FailW(w, err)
+		return
+	}
+	// validator errors
+	if _, ok := err.(validator.ValidationErrors); ok {
+		FailW(w, errw.Validate(err.Error()))
+		return
+	}
+	// all others 500
+	FailW(w, errw.InternalServer(err.Error()))
 }
 
-// FailValidate 400 ValidateError
-func FailValidate(w http.ResponseWriter, message string) {
-	Fail(w, http.StatusBadRequest, "ValidateError", message)
-}
-
-// FailNotFound 400 NotFoundError
 func FailNotFound(w http.ResponseWriter, message string) {
-	Fail(w, http.StatusNotFound, "NotFoundError", message)
+	FailW(w, errw.NotFound(message))
 }
 
-// FailUnauthorized 401 UnauthorizedError
 func FailUnauthorized(w http.ResponseWriter, message string) {
-	Fail(w, http.StatusUnauthorized, "UnauthorizedError", message)
+	FailW(w, errw.Unauthorized(message))
+}
+
+func FailValidate(w http.ResponseWriter, message string) {
+	FailW(w, errw.Validate(message))
+}
+
+func FailValidateField(w http.ResponseWriter, field, reason string) {
+	FailW(w, errw.ValidateField(field, reason))
+}
+
+func FailInternalServer(w http.ResponseWriter, message string) {
+	FailW(w, errw.InternalServer(message))
+}
+
+func FailTimeout(w http.ResponseWriter, message string) {
+	FailW(w, errw.Timeout(message))
 }
