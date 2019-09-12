@@ -1,4 +1,4 @@
-package util
+package rest
 
 import (
 	"errors"
@@ -49,8 +49,8 @@ func isPrivateAddress(address string) (bool, error) {
 	return false, nil
 }
 
-// IPFromRequest return client's real public IP address from http request headers.
-func IPFromRequest(r *http.Request) string {
+// RealIP return client's real public IP address from http request headers.
+func RealIP(r *http.Request) string {
 	// Fetch header value
 	xRealIP := r.Header.Get("X-Real-Ip")
 	xForwardedFor := r.Header.Get("X-Forwarded-For")

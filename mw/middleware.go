@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cshum/gopkg/util"
+	"github.com/cshum/gopkg/rest"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"go.uber.org/zap"
@@ -46,7 +46,7 @@ func AccessLogHandler(log func(string, ...zap.Field)) func(http.Handler) http.Ha
 				zap.Int("status", ww.Status()),
 				zap.Duration("took", latency),
 				zap.Int64("latency", latency.Nanoseconds()),
-				zap.String("remote", util.IPFromRequest(r)),
+				zap.String("remote", rest.RealIP(r)),
 				zap.String("request", r.RequestURI),
 				zap.String("method", r.Method),
 			}
