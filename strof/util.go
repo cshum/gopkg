@@ -19,8 +19,8 @@ func Hash(v interface{}) (string, error) {
 	return hex.EncodeToString(hash[:]), nil
 }
 
-// NonBlank any of string
-func NonBlank(list ...string) string {
+// NonEmpty any of string
+func NonEmpty(list ...string) string {
 	for _, str := range list {
 		if str = strings.TrimSpace(str); str != "" {
 			return str
