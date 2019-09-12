@@ -1,4 +1,4 @@
-package util
+package strof
 
 import (
 	"math/rand"
@@ -18,7 +18,7 @@ var src = rand.NewSource(time.Now().UnixNano())
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-func RandString(n int) string {
+func Rand(n int) string {
 	b := make([]byte, n)
 	l := len(letters)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
