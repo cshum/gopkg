@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cshum/gopkg/cache"
-	"github.com/cshum/gopkg/util"
+	"github.com/cshum/gopkg/strof"
 	"github.com/go-redis/redis"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
@@ -43,7 +43,7 @@ func (r *CachedRequest) Do(
 		r.Key = r.Prefix + key
 	}
 	if cached, ts := r.getSearchCache(r.Key); cached != nil {
-		elasped := time.Millisecond * time.Duration(util.Timestamp()-ts)
+		elasped := time.Millisecond * time.Duration(Timestamp()-ts)
 		if r.Refresh > 0 && elasped >= r.Refresh {
 			go func() {
 				if result, err := r.Elastic.Search(indices...).
@@ -63,7 +63,7 @@ func (r *CachedRequest) Do(
 
 func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult) {
 	if val, err := json.Marshal(&CachedPayload{
-		util.Timestamp(), result,
+		Timestamp(), result,
 	}); err == nil {
 		if err := r.Cache.Set(key, val, r.Expiration); err != nil && r.Logger != nil {
 			r.Logger.Error("redis", zap.Error(err))
@@ -94,7 +94,7 @@ func SearchCacheKey(indices []string, source *elastic.SearchSource) (string, err
 	if err != nil {
 		return "", err
 	}
-	hash, err := util.ToHash(src)
+	hash, err := strof.Hash(src)
 	if err != nil {
 		return "", err
 	}
