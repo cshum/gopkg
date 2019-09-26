@@ -24,6 +24,14 @@ func NotFound(message string) *Error {
 	}
 }
 
+func Invalid(message string) *Error {
+	return &Error{
+		Code:    "InvalidError",
+		Status:  http.StatusBadRequest,
+		Message: message,
+	}
+}
+
 func Unauthorized(message string) *Error {
 	return &Error{
 		Code:    "UnauthorizedError",
