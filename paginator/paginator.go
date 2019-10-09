@@ -25,14 +25,19 @@ func (p *Paginator) GetOffset() int {
 }
 
 func (p *Paginator) GetFrom() int {
-	return p.GetOffset()
+	from := p.GetOffset()
+	if cnt := p.itemcount; cnt > 0 && from > cnt {
+		return cnt
+	}
+	return from
 }
 
 func (p *Paginator) GetTo() int {
-	if cnt := int(p.itemcount); cnt > 0 && p.GetOffset()+p.Size > cnt {
+	to := p.GetOffset() + p.Size
+	if cnt := p.itemcount; cnt > 0 && to > cnt {
 		return cnt
 	}
-	return p.GetOffset() + p.Size
+	return to
 }
 
 func (p *Paginator) GetLimit() int {
