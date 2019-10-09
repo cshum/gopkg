@@ -3,8 +3,8 @@ package es
 import (
 	"context"
 	"errors"
+	"github.com/cshum/gopkg/dev"
 	"github.com/cshum/gopkg/paginator"
-	"github.com/cshum/gopkg/util"
 	"github.com/olivere/elastic"
 )
 
@@ -152,7 +152,7 @@ func (q *Search) Do(
 	}
 	if DebugMode {
 		s, _ := source.Source()
-		util.PrintJSON(s)
+		dev.PrintJSON(s)
 	}
 	if p != nil {
 		if cnt := result.TotalHits(); cnt <= 10000 {
