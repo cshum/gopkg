@@ -9,7 +9,7 @@ import (
 type Paginator struct {
 	Page      int `json:"page" validate:"min=1"`
 	Size      int `json:"size" validate:"min=1,max=100"`
-	itemcount int64
+	itemcount int
 	pagecount int
 }
 
@@ -39,7 +39,7 @@ func (p *Paginator) GetLimit() int {
 	return p.Size
 }
 
-func (p *Paginator) GetItemCount() int64 {
+func (p *Paginator) GetItemCount() int {
 	return p.itemcount
 }
 
@@ -59,18 +59,18 @@ func (p *Paginator) Next() bool {
 	return true
 }
 
-func (p *Paginator) SetItemCount(count int64) {
+func (p *Paginator) SetItemCount(count int) {
 	p.itemcount = count
 	p.pagecount = int(math.Ceil(float64(p.itemcount) / float64(p.Size)))
 }
 
 // Pagination for json response
 type Pagination struct {
-	HasNext   bool  `json:"has_next"`
-	ItemCount int64 `json:"item_count"`
-	PageCount int   `json:"page_count"`
-	Page      int   `json:"page"`
-	Size      int   `json:"size"`
+	HasNext   bool `json:"has_next"`
+	ItemCount int  `json:"item_count"`
+	PageCount int  `json:"page_count"`
+	Page      int  `json:"page"`
+	Size      int  `json:"size"`
 }
 
 // Pagination create struct from pagecount results itemcount

@@ -156,7 +156,7 @@ func (q *Search) Do(
 	}
 	if p != nil {
 		if cnt := result.TotalHits(); cnt <= 10000 {
-			p.SetItemCount(cnt)
+			p.SetItemCount(int(cnt))
 		} else {
 			p.SetItemCount(10000)
 		}
