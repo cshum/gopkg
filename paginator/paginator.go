@@ -26,7 +26,7 @@ func (p *Paginator) GetOffset() int {
 
 func (p *Paginator) GetFrom() int {
 	from := p.GetOffset()
-	if cnt := p.itemcount; cnt > 0 && from > cnt {
+	if cnt := p.itemcount; from > cnt {
 		return cnt
 	}
 	return from
@@ -34,7 +34,7 @@ func (p *Paginator) GetFrom() int {
 
 func (p *Paginator) GetTo() int {
 	to := p.GetOffset() + p.Size
-	if cnt := p.itemcount; cnt > 0 && to > cnt {
+	if cnt := p.itemcount; to > cnt {
 		return cnt
 	}
 	return to
