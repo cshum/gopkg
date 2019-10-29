@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cshum/gopkg/cache"
 	"github.com/cshum/gopkg/strof"
+	"github.com/cshum/gopkg/tinycache"
 	"github.com/go-redis/redis"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
@@ -16,7 +16,7 @@ import (
 
 type CachedRequest struct {
 	Elastic    *elastic.Client
-	Cache      cache.Cache
+	Cache      tinycache.Cache
 	Prefix     string
 	Key        string
 	Threshold  time.Duration
@@ -66,11 +66,11 @@ func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult)
 		Timestamp(), result,
 	}); err == nil {
 		if err := r.Cache.Set(key, val, r.Expiration); err != nil && r.Logger != nil {
-			r.Logger.Error("redis", zap.Error(err))
+			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
 	if r.Logger != nil {
-		r.Logger.Debug("redis",
+		r.Logger.Debug("es-cache",
 			zap.String("action", "setSearchCache"),
 			zap.String("key", key))
 	}
@@ -82,7 +82,7 @@ func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
 		} else if err != redis.Nil && r.Logger != nil {
-			r.Logger.Error("redis", zap.Error(err))
+			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
 	return nil, 0
