@@ -3,15 +3,11 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/gorilla/schema"
+	"gopkg.in/go-playground/validator.v9"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi"
-
-	"github.com/gorilla/schema"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 var decoder *schema.Decoder
@@ -24,12 +20,6 @@ func init() {
 	decoder.IgnoreUnknownKeys(true)
 	// validator
 	Validate = validator.New()
-}
-
-// ParamInt parse int from chi URL param
-func ParamInt(r *http.Request, key string) int {
-	id, _ := strconv.Atoi(chi.URLParam(r, key))
-	return id
 }
 
 // ParseQuery decode req query and validate struct from string map
