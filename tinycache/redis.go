@@ -25,6 +25,5 @@ func (r *Redis) Get(key string) ([]byte, error) {
 }
 
 func (r *Redis) Set(key string, value []byte, ttl time.Duration) error {
-	_, err := r.Client.Set(key, value, ttl).Result()
-	return err
+	return r.Client.Set(key, value, ttl).Err()
 }
