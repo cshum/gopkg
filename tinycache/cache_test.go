@@ -15,7 +15,7 @@ func DoTestCache(t *testing.T, c Cache) {
 		t.Error("should value nil and err not found")
 	}
 	// set and found
-	if err := c.Set("a", []byte{'b'}, time.Minute*1); err != nil {
+	if err := c.Set("a", []byte{'b'}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
@@ -23,6 +23,10 @@ func DoTestCache(t *testing.T, c Cache) {
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
 		t.Error("should value and no error")
+	}
+	time.Sleep(time.Millisecond * 500)
+	if v, err := c.Get("a"); v != nil || err != NotFound {
+		t.Error("should value nil and err not found")
 	}
 	// set nil and found nil
 	/*
