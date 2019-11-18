@@ -30,7 +30,8 @@ func RecoverHandler(
 // FileServer conveniently sets up a http.FileServer handler to serve
 // static files from a http.FileSystem.
 func FileServer(
-	path, dirpath string, get func(path string, handle http.HandlerFunc),
+	get func(path string, handle http.HandlerFunc),
+	path, dirpath string,
 ) {
 	if strings.ContainsAny(path, "{}*") {
 		panic(errors.New("FileServer does not permit URL parameters"))
