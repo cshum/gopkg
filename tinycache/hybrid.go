@@ -26,11 +26,13 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 		return res.([]byte), nil
 	}
 	if c.Redis != nil {
-		if res, err := c.Redis.Get(key).Result(); res != "" {
-			value := []byte(res)
-			c.Local.Set(key, value, c.maxLocalTTL)
-			return value, err
+		res, err := c.Redis.Get(key).Result()
+		if err == redis.Nil {
+			return nil, NotFound
 		}
+		value := []byte(res)
+		c.Local.Set(key, value, c.maxLocalTTL)
+		return value, err
 	}
 	return nil, NotFound
 }
