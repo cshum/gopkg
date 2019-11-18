@@ -32,7 +32,7 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 			return value, err
 		}
 	}
-	return []byte{}, nil
+	return nil, NotFound
 }
 
 func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {

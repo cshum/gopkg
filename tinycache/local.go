@@ -20,7 +20,7 @@ func (c *Local) Get(key string) ([]byte, error) {
 	if res, ok := c.Cache.Get(key); ok {
 		return res.([]byte), nil
 	}
-	return []byte{}, nil
+	return nil, NotFound
 }
 
 func (c *Local) Set(key string, value []byte, ttl time.Duration) error {

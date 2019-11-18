@@ -18,6 +18,9 @@ type Redis struct {
 
 func (r *Redis) Get(key string) ([]byte, error) {
 	res, err := r.Client.Get(key).Result()
+	if err == redis.Nil {
+		return nil, NotFound
+	}
 	return []byte(res), err
 }
 
