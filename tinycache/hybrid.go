@@ -30,8 +30,19 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 		if err == redis.Nil {
 			return nil, NotFound
 		}
+		if err != nil {
+			return nil, err
+		}
+		ttl, err := c.Redis.TTL(key).Result()
+		if err != nil {
+			return nil, err
+		}
 		value := []byte(res)
-		c.Local.Set(key, value, c.maxLocalTTL)
+		if ttl > c.maxLocalTTL {
+			c.Local.Set(key, value, c.maxLocalTTL)
+		} else {
+			c.Local.Set(key, value, ttl)
+		}
 		return value, err
 	}
 	return nil, NotFound
@@ -44,7 +55,7 @@ func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
 		c.Local.Set(key, value, ttl)
 	}
 	if c.Redis != nil {
-		if _, err := c.Redis.Set(key, value, ttl).Result(); err != nil {
+		if err := c.Redis.Set(key, value, ttl).Err(); err != nil {
 			return err
 		}
 	}
