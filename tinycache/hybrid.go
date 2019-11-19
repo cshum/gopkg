@@ -10,14 +10,14 @@ import (
 type Hybrid struct {
 	Redis       *redis.Client
 	Local       *cache.Cache
-	maxLocalTTL time.Duration
+	MaxLocalTTL time.Duration
 }
 
 func NewHybrid(client *redis.Client, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
 	return &Hybrid{
 		Redis:       client,
 		Local:       cache.New(maxLocalTTL, cleanupInterval),
-		maxLocalTTL: maxLocalTTL,
+		MaxLocalTTL: maxLocalTTL,
 	}
 }
 
@@ -38,8 +38,8 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 			return nil, err
 		}
 		value := []byte(res)
-		if ttl > c.maxLocalTTL {
-			c.Local.Set(key, value, c.maxLocalTTL)
+		if ttl > c.MaxLocalTTL {
+			c.Local.Set(key, value, c.MaxLocalTTL)
 		} else {
 			c.Local.Set(key, value, ttl)
 		}
@@ -49,8 +49,8 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 }
 
 func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
-	if ttl > c.maxLocalTTL {
-		c.Local.Set(key, value, c.maxLocalTTL)
+	if ttl > c.MaxLocalTTL {
+		c.Local.Set(key, value, c.MaxLocalTTL)
 	} else {
 		c.Local.Set(key, value, ttl)
 	}
