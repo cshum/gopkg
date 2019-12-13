@@ -31,9 +31,8 @@ func (r *SearchRequest) Do(
 }
 
 type Search struct {
-	Indices     []string
-	IndexPrefix string
-	Request     Request
+	Indices []string
+	Request Request
 
 	skipfnscore bool
 	queries     []QueryHandler
@@ -147,15 +146,7 @@ func (q *Search) Do(
 	if err != nil {
 		return nil, err
 	}
-	var indices []string
-	if q.IndexPrefix != "" {
-		for _, idx := range q.Indices {
-			indices = append(indices, q.IndexPrefix+idx)
-		}
-	} else {
-		indices = q.Indices
-	}
-	result, err := q.Request.Do(ctx, indices, source)
+	result, err := q.Request.Do(ctx, q.Indices, source)
 	if err != nil {
 		return result, err
 	}
