@@ -8,15 +8,15 @@ import (
 )
 
 type Hybrid struct {
-	Redis       *redis.Pool
-	RedisPrefix string
+	Pool        *redis.Pool
+	Prefix      string
 	Local       *cache.Cache
 	MaxLocalTTL time.Duration
 }
 
 func NewHybrid(redis *redis.Pool, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
 	return &Hybrid{
-		Redis:       redis,
+		Pool:        redis,
 		Local:       cache.New(maxLocalTTL, cleanupInterval),
 		MaxLocalTTL: maxLocalTTL,
 	}
@@ -27,13 +27,13 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 		value = res.([]byte)
 		return
 	}
-	if c.Redis != nil {
-		conn := c.Redis.Get()
+	if c.Pool != nil {
+		conn := c.Pool.Get()
 		defer conn.Close()
-		if err = conn.Send("GET", c.RedisPrefix+key); err != nil {
+		if err = conn.Send("GET", c.Prefix+key); err != nil {
 			return
 		}
-		if err = conn.Send("PTTL", c.RedisPrefix+key); err != nil {
+		if err = conn.Send("PTTL", c.Prefix+key); err != nil {
 			return
 		}
 		if err = conn.Flush(); err != nil {
@@ -67,11 +67,11 @@ func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
 	} else {
 		c.Local.Set(key, value, ttl)
 	}
-	if c.Redis != nil {
-		conn := c.Redis.Get()
+	if c.Pool != nil {
+		conn := c.Pool.Get()
 		defer conn.Close()
 		if _, err := conn.Do(
-			"PSETEX", c.RedisPrefix+key, int64(ttl/time.Millisecond), value); err != nil {
+			"PSETEX", c.Prefix+key, int64(ttl/time.Millisecond), value); err != nil {
 			return err
 		}
 	}

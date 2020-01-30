@@ -9,7 +9,6 @@ import (
 
 	"github.com/cshum/gopkg/strof"
 	"github.com/cshum/gopkg/tinycache"
-	"github.com/go-redis/redis"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
 )
@@ -81,7 +80,7 @@ func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64
 		cached := &CachedPayload{}
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
-		} else if err != redis.Nil && r.Logger != nil {
+		} else if err == tinycache.NotFound && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
