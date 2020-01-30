@@ -3,19 +3,20 @@ package tinycache
 import (
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/patrickmn/go-cache"
 )
 
 type Hybrid struct {
-	Redis       *redis.Client
+	Redis       *redis.Pool
+	RedisPrefix string
 	Local       *cache.Cache
 	MaxLocalTTL time.Duration
 }
 
-func NewHybrid(client *redis.Client, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
+func NewHybrid(redis *redis.Pool, maxLocalTTL, cleanupInterval time.Duration) *Hybrid {
 	return &Hybrid{
-		Redis:       client,
+		Redis:       redis,
 		Local:       cache.New(maxLocalTTL, cleanupInterval),
 		MaxLocalTTL: maxLocalTTL,
 	}
@@ -26,18 +27,20 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 		return res.([]byte), nil
 	}
 	if c.Redis != nil {
-		res, err := c.Redis.Get(key).Result()
-		if err == redis.Nil {
+		conn := c.Redis.Get()
+		defer conn.Close()
+		value, err := redis.Bytes(conn.Do("GET", c.RedisPrefix+key))
+		if err == redis.ErrNil {
 			return nil, NotFound
 		}
 		if err != nil {
 			return nil, err
 		}
-		ttl, err := c.Redis.TTL(key).Result()
+		pttl, err := redis.Int64(conn.Do("PTTL", c.RedisPrefix+key))
 		if err != nil {
 			return nil, err
 		}
-		value := []byte(res)
+		ttl := time.Duration(pttl) * time.Millisecond
 		if ttl > c.MaxLocalTTL {
 			c.Local.Set(key, value, c.MaxLocalTTL)
 		} else {
@@ -55,7 +58,10 @@ func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
 		c.Local.Set(key, value, ttl)
 	}
 	if c.Redis != nil {
-		if err := c.Redis.Set(key, value, ttl).Err(); err != nil {
+		conn := c.Redis.Get()
+		defer conn.Close()
+		if _, err := conn.Do(
+			"PSETEX", c.RedisPrefix+key, int64(ttl/time.Millisecond), value); err != nil {
 			return err
 		}
 	}

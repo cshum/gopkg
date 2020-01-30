@@ -3,27 +3,33 @@ package tinycache
 import (
 	"time"
 
-	"github.com/go-redis/redis"
+	"github.com/gomodule/redigo/redis"
 )
 
-func NewRedis(client *redis.Client) *Redis {
-	return &Redis{
-		Client: client,
-	}
+type Redis struct {
+	Pool   *redis.Pool
+	Prefix string
 }
 
-type Redis struct {
-	Client *redis.Client
+func NewRedis(pool *redis.Pool) *Redis {
+	return &Redis{
+		Pool: pool,
+	}
 }
 
 func (r *Redis) Get(key string) ([]byte, error) {
-	res, err := r.Client.Get(key).Result()
-	if err == redis.Nil {
+	c := r.Pool.Get()
+	defer c.Close()
+	res, err := redis.Bytes(c.Do("GET", r.Prefix+key))
+	if err == redis.ErrNil {
 		return nil, NotFound
 	}
-	return []byte(res), err
+	return res, err
 }
 
 func (r *Redis) Set(key string, value []byte, ttl time.Duration) error {
-	return r.Client.Set(key, value, ttl).Err()
+	c := r.Pool.Get()
+	defer c.Close()
+	_, err := c.Do("PSETEX", r.Prefix+key, int64(ttl/time.Millisecond), value)
+	return err
 }

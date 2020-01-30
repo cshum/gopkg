@@ -1,32 +1,33 @@
 package tinycache
 
 import (
-	"github.com/go-redis/redis"
 	"testing"
 	"time"
+
+	"github.com/gomodule/redigo/redis"
 )
 
 func DoTestCache(t *testing.T, c Cache) {
 	// not found
 	if v, err := c.Get("a"); v != nil || err != NotFound {
-		t.Error("should value nil and err not found")
+		t.Error(err, "should value nil and err not found")
 	}
 	if v, err := c.Get("a"); v != nil || err != NotFound {
-		t.Error("should value nil and err not found")
+		t.Error(err, "should value nil and err not found")
 	}
 	// set and found
 	if err := c.Set("a", []byte{'b'}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
-		t.Error("should value and no error")
+		t.Error(err, "should value and no error")
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
-		t.Error("should value and no error")
+		t.Error(err, "should value and no error")
 	}
 	time.Sleep(time.Millisecond * 500)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
-		t.Error("should value nil and err not found")
+		t.Error(v, err, "should value nil and err not found")
 	}
 	// set nil and found nil
 	/*
@@ -47,10 +48,17 @@ func TestLocal(t *testing.T) {
 }
 
 func TestRedis(t *testing.T) {
-	DoTestCache(t, NewRedis(redis.NewClient(&redis.Options{})))
+	DoTestCache(t, NewRedis(&redis.Pool{
+		Dial: func() (conn redis.Conn, err error) {
+			return redis.Dial("tcp", ":6379")
+		},
+	}))
 }
 
 func TestHybrid(t *testing.T) {
-	DoTestCache(t, NewHybrid(redis.NewClient(
-		&redis.Options{}), time.Minute*1, time.Minute*1))
+	DoTestCache(t, NewHybrid(&redis.Pool{
+		Dial: func() (conn redis.Conn, err error) {
+			return redis.Dial("tcp", ":6379")
+		},
+	}, time.Minute*1, time.Minute*1))
 }
