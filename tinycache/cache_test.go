@@ -60,5 +60,5 @@ func TestHybrid(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Minute*1, time.Minute*1))
+	}, time.Minute*1))
 }
