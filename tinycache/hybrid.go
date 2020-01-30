@@ -22,23 +22,32 @@ func NewHybrid(redis *redis.Pool, maxLocalTTL, cleanupInterval time.Duration) *H
 	}
 }
 
-func (c *Hybrid) Get(key string) ([]byte, error) {
+func (c *Hybrid) Get(key string) (value []byte, err error) {
 	if res, ok := c.Local.Get(key); ok {
-		return res.([]byte), nil
+		value = res.([]byte)
+		return
 	}
 	if c.Redis != nil {
 		conn := c.Redis.Get()
 		defer conn.Close()
-		value, err := redis.Bytes(conn.Do("GET", c.RedisPrefix+key))
-		if err == redis.ErrNil {
-			return nil, NotFound
+		if err = conn.Send("GET", c.RedisPrefix+key); err != nil {
+			return
 		}
-		if err != nil {
-			return nil, err
+		if err = conn.Send("PTTL", c.RedisPrefix+key); err != nil {
+			return
 		}
-		pttl, err := redis.Int64(conn.Do("PTTL", c.RedisPrefix+key))
-		if err != nil {
-			return nil, err
+		if err = conn.Flush(); err != nil {
+			return
+		}
+		if value, err = redis.Bytes(conn.Receive()); err != nil {
+			if err == redis.ErrNil {
+				err = NotFound
+			}
+			return
+		}
+		var pttl int64
+		if pttl, err = redis.Int64(conn.Receive()); err != nil {
+			return
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
 		if ttl > c.MaxLocalTTL {
@@ -46,9 +55,10 @@ func (c *Hybrid) Get(key string) ([]byte, error) {
 		} else {
 			c.Local.Set(key, value, ttl)
 		}
-		return value, err
+		return
 	}
-	return nil, NotFound
+	err = NotFound
+	return
 }
 
 func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
