@@ -1,12 +1,13 @@
 package basepath
 
 import (
-	"github.com/kardianos/osext"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+
+	"github.com/kardianos/osext"
 )
 
 type OnFileLoadedHandler func(path string, isPreloaded bool)
@@ -31,7 +32,7 @@ func Init(elem ...string) {
 			panic(err)
 		}
 		if strings.HasSuffix(basePath, "/exe") ||
-			strings.HasSuffix(basePath, "/T") {
+			strings.Contains(basePath, "/T") {
 			// execute via go run or go test
 			skip := 3
 			if len(elem) == 1 && elem[0] == stub {
