@@ -41,6 +41,29 @@ func DoTestCache(t *testing.T, c Cache) {
 			t.Error("should nil value and no error")
 		}
 	*/
+
+	// test JSON Marshal Unmarshal
+	var v []int
+	if err := Unmarshal(c, "a", v); err != NotFound {
+		t.Error(err, "should value nil and err not found")
+	}
+	if err := Unmarshal(c, "a", v); err != NotFound {
+		t.Error(err, "should value nil and err not found")
+	}
+	// set and found
+	if err := Marshal(c, "a", []int{1, 2, 3}, time.Millisecond*100); err != nil {
+		t.Error(err)
+	}
+	if raw, err := c.Get("a"); string(raw) != "[1,2,3]" || err != nil {
+		t.Error(err, "should value and no error")
+	}
+	if err := Unmarshal(c, "a", &v); len(v) != 3 || v[2] != 3 || err != nil {
+		t.Error(err, "should value and no error")
+	}
+	time.Sleep(time.Millisecond * 500)
+	if v, err := c.Get("a"); v != nil || err != NotFound {
+		t.Error(v, err, "should value nil and err not found")
+	}
 }
 
 func TestLocal(t *testing.T) {

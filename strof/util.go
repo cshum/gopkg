@@ -20,8 +20,8 @@ func Hash(v interface{}) (string, error) {
 }
 
 // NonEmpty any of string
-func NonEmpty(list ...string) string {
-	for _, str := range list {
+func NonEmpty(strs ...string) string {
+	for _, str := range strs {
 		if str = strings.TrimSpace(str); str != "" {
 			return str
 		}
