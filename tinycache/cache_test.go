@@ -85,3 +85,11 @@ func TestHybrid(t *testing.T) {
 		},
 	}, time.Minute*1))
 }
+
+func TestHybridRedis(t *testing.T) {
+	DoTestCache(t, NewHybrid(&redis.Pool{
+		Dial: func() (conn redis.Conn, err error) {
+			return redis.Dial("tcp", ":6379")
+		},
+	}, time.Nanosecond))
+}
