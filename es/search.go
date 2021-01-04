@@ -104,7 +104,7 @@ func (q *Search) DoSource(
 		}
 	}
 	s := elastic.NewSearchSource()
-	if p != nil && !q.skipfnscore && len(q.fnscores) > 0 {
+	if !q.skipfnscore && len(q.fnscores) > 0 {
 		fsq := elastic.NewFunctionScoreQuery().
 			BoostMode("replace").
 			Query(bq)
