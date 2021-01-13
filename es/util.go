@@ -37,10 +37,10 @@ func UpdateAlias(ctx context.Context, es *elastic.Client, name string, index str
 	return nil
 }
 
-func CleanupOldIndices(ctx context.Context, es *elastic.Client, name, except string, keep int) error {
+func CleanupOldIndices(ctx context.Context, es *elastic.Client, prefix, except string, keep int) error {
 	indices, err := es.
 		CatIndices().
-		Index(name + "-*").
+		Index(prefix + "*").
 		Sort("index:desc").
 		Do(ctx)
 	if err != nil {
