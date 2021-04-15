@@ -8,11 +8,13 @@ import (
 
 type Local struct {
 	Cache *cache.Cache
+	TTL   time.Duration
 }
 
-func NewLocal(defaultTTL, cleanupInterval time.Duration) *Local {
+func NewLocal(ttl time.Duration) *Local {
 	return &Local{
-		Cache: cache.New(defaultTTL, cleanupInterval),
+		Cache: cache.New(ttl, ttl),
+		TTL:   ttl,
 	}
 }
 
@@ -23,7 +25,7 @@ func (c *Local) Get(key string) ([]byte, error) {
 	return nil, NotFound
 }
 
-func (c *Local) Set(key string, value []byte, ttl time.Duration) error {
-	c.Cache.Set(key, value, ttl)
+func (c *Local) Set(key string, value []byte) error {
+	c.Cache.Set(key, value, c.TTL)
 	return nil
 }

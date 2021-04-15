@@ -7,7 +7,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-func DoTestCache(t *testing.T, c Cache) {
+func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
 	// not found
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(err, "should value nil and err not found")
@@ -16,7 +16,7 @@ func DoTestCache(t *testing.T, c Cache) {
 		t.Error(err, "should value nil and err not found")
 	}
 	// set and found
-	if err := c.Set("a", []byte{'b'}, time.Millisecond*100); err != nil {
+	if err := c.Set("a", []byte{'b'}); err != nil {
 		t.Error(err)
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
@@ -25,7 +25,7 @@ func DoTestCache(t *testing.T, c Cache) {
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(sleepTime)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
@@ -51,7 +51,7 @@ func DoTestCache(t *testing.T, c Cache) {
 		t.Error(err, "should value nil and err not found")
 	}
 	// set and found
-	if err := Marshal(c, "a", []int{1, 2, 3}, time.Millisecond*100); err != nil {
+	if err := Marshal(c, "a", []int{1, 2, 3}); err != nil {
 		t.Error(err)
 	}
 	if raw, err := c.Get("a"); string(raw) != "[1,2,3]" || err != nil {
@@ -60,14 +60,14 @@ func DoTestCache(t *testing.T, c Cache) {
 	if err := Unmarshal(c, "a", &v); len(v) != 3 || v[2] != 3 || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(sleepTime)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
 }
 
 func TestLocal(t *testing.T) {
-	DoTestCache(t, NewLocal(time.Minute*1, time.Minute*1))
+	DoTestCache(t, NewLocal(time.Millisecond*100), time.Millisecond*500)
 }
 
 func TestRedis(t *testing.T) {
@@ -75,21 +75,21 @@ func TestRedis(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}))
+	}, time.Millisecond*100), time.Millisecond*500)
 }
 
-func TestHybrid(t *testing.T) {
-	DoTestCache(t, NewHybrid(&redis.Pool{
-		Dial: func() (conn redis.Conn, err error) {
-			return redis.Dial("tcp", ":6379")
-		},
-	}, time.Minute*1))
-}
-
-func TestHybridRedis(t *testing.T) {
-	DoTestCache(t, NewHybrid(&redis.Pool{
-		Dial: func() (conn redis.Conn, err error) {
-			return redis.Dial("tcp", ":6379")
-		},
-	}, time.Nanosecond))
-}
+//func TestHybrid(t *testing.T) {
+//	DoTestCache(t, NewHybrid(&redis.Pool{
+//		Dial: func() (conn redis.Conn, err error) {
+//			return redis.Dial("tcp", ":6379")
+//		},
+//	}, time.Minute*1))
+//}
+//
+//func TestHybridRedis(t *testing.T) {
+//	DoTestCache(t, NewHybrid(&redis.Pool{
+//		Dial: func() (conn redis.Conn, err error) {
+//			return redis.Dial("tcp", ":6379")
+//		},
+//	}, time.Nanosecond))
+//}

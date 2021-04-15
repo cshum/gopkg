@@ -2,15 +2,14 @@ package tinycache
 
 import (
 	"encoding/json"
-	"time"
 )
 
-func Marshal(c Cache, key string, v interface{}, ttl time.Duration) (err error) {
+func Marshal(c Cache, key string, v interface{}) (err error) {
 	var raw []byte
 	if raw, err = json.Marshal(v); err != nil {
 		return
 	}
-	if err = c.Set(key, raw, ttl); err != nil {
+	if err = c.Set(key, raw); err != nil {
 		return
 	}
 	return
