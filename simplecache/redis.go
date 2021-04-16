@@ -8,14 +8,12 @@ import (
 
 type Redis struct {
 	Pool   *redis.Pool
-	TTL    time.Duration
 	Prefix string
 }
 
-func NewRedis(pool *redis.Pool, ttl time.Duration) *Redis {
+func NewRedis(pool *redis.Pool) *Redis {
 	return &Redis{
 		Pool: pool,
-		TTL:  ttl,
 	}
 }
 
@@ -29,9 +27,9 @@ func (r *Redis) Get(key string) ([]byte, error) {
 	return res, err
 }
 
-func (r *Redis) Set(key string, value []byte) error {
+func (r *Redis) Set(key string, value []byte, ttl time.Duration) error {
 	c := r.Pool.Get()
 	defer c.Close()
-	_, err := c.Do("PSETEX", r.Prefix+key, int64(r.TTL/time.Millisecond), value)
+	_, err := c.Do("PSETEX", r.Prefix+key, int64(ttl/time.Millisecond), value)
 	return err
 }

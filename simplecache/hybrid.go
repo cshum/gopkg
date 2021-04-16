@@ -7,17 +7,17 @@ import (
 )
 
 type Hybrid struct {
-	Pool   *redis.Pool
-	TTL    time.Duration
-	Prefix string
-	Local  *Local
+	Pool        *redis.Pool
+	Prefix      string
+	Local       *Local
+	MaxLocalTTL time.Duration
 }
 
-func NewHybrid(redis *redis.Pool, ttl time.Duration, local *Local) *Hybrid {
+func NewHybrid(redis *redis.Pool, local *Local, maxLocalTTL time.Duration) *Hybrid {
 	return &Hybrid{
-		Pool:  redis,
-		TTL:   ttl,
-		Local: local,
+		Pool:        redis,
+		Local:       local,
+		MaxLocalTTL: maxLocalTTL,
 	}
 }
 
@@ -49,11 +49,13 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 			return
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
-		if ttl >= c.Local.TTL {
-			// if redis still more ttl than local, re-cache at local
-			if err = c.Local.Set(key, value); err != nil {
-				return
-			}
+		localTTL := ttl
+		if ttl > c.MaxLocalTTL {
+			localTTL = c.MaxLocalTTL
+		}
+		// if redis still more ttl than local, re-cache at local
+		if err = c.Local.Set(key, value, localTTL); err != nil {
+			return
 		}
 		return
 	}
@@ -61,15 +63,19 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 	return
 }
 
-func (c *Hybrid) Set(key string, value []byte) error {
-	if err := c.Local.Set(key, value); err != nil {
+func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
+	localTTL := ttl
+	if ttl > c.MaxLocalTTL {
+		localTTL = c.MaxLocalTTL
+	}
+	if err := c.Local.Set(key, value, localTTL); err != nil {
 		return err
 	}
 	if c.Pool != nil {
 		conn := c.Pool.Get()
 		defer conn.Close()
 		if _, err := conn.Do(
-			"PSETEX", c.Prefix+key, int64(c.TTL/time.Millisecond), value); err != nil {
+			"PSETEX", c.Prefix+key, int64(ttl/time.Millisecond), value); err != nil {
 			return err
 		}
 	}

@@ -3,19 +3,23 @@ package simplecache
 import (
 	"time"
 
-	"github.com/patrickmn/go-cache"
+	"github.com/dgraph-io/ristretto"
 )
 
 type Local struct {
-	Cache *cache.Cache
-	TTL   time.Duration
+	Cache *ristretto.Cache
 }
 
-func NewLocal(ttl time.Duration) *Local {
-	return &Local{
-		Cache: cache.New(ttl, ttl),
-		TTL:   ttl,
+func NewLocal(maxItems, maxSize int64) *Local {
+	c, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: maxItems * 10,
+		MaxCost:     maxSize,
+		BufferItems: 64,
+	})
+	if err != nil {
+		panic(err)
 	}
+	return &Local{c}
 }
 
 func (c *Local) Get(key string) ([]byte, error) {
@@ -25,7 +29,7 @@ func (c *Local) Get(key string) ([]byte, error) {
 	return nil, NotFound
 }
 
-func (c *Local) Set(key string, value []byte) error {
-	c.Cache.Set(key, value, c.TTL)
+func (c *Local) Set(key string, value []byte, ttl time.Duration) error {
+	c.Cache.SetWithTTL(key, value, int64(len(value)), ttl)
 	return nil
 }

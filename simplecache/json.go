@@ -2,14 +2,15 @@ package simplecache
 
 import (
 	"encoding/json"
+	"time"
 )
 
-func JSONMarshal(c Cache, key string, v interface{}) (err error) {
+func JSONMarshal(c Cache, key string, v interface{}, ttl time.Duration) (err error) {
 	var raw []byte
 	if raw, err = json.Marshal(v); err != nil {
 		return
 	}
-	if err = c.Set(key, raw); err != nil {
+	if err = c.Set(key, raw, ttl); err != nil {
 		return
 	}
 	return

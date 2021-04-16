@@ -7,7 +7,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
+func DoTestCache(t *testing.T, c Cache) {
 	// not found
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(err, "should value nil and err not found")
@@ -16,7 +16,7 @@ func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
 		t.Error(err, "should value nil and err not found")
 	}
 	// set and found
-	if err := c.Set("a", []byte{'b'}); err != nil {
+	if err := c.Set("a", []byte{'b'}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
@@ -25,7 +25,7 @@ func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(sleepTime)
+	time.Sleep(time.Millisecond * 500)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
@@ -51,7 +51,7 @@ func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
 		t.Error(err, "should value nil and err not found")
 	}
 	// set and found
-	if err := JSONMarshal(c, "a", []int{1, 2, 3}); err != nil {
+	if err := JSONMarshal(c, "a", []int{1, 2, 3}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
 	if raw, err := c.Get("a"); string(raw) != "[1,2,3]" || err != nil {
@@ -60,14 +60,14 @@ func DoTestCache(t *testing.T, c Cache, sleepTime time.Duration) {
 	if err := JSONUnmarshal(c, "a", &v); len(v) != 3 || v[2] != 3 || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(sleepTime)
+	time.Sleep(time.Millisecond * 500)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
 }
 
 func TestLocal(t *testing.T) {
-	DoTestCache(t, NewLocal(time.Millisecond*100), time.Millisecond*500)
+	DoTestCache(t, NewLocal(10, int64(10<<20)))
 }
 
 func TestRedis(t *testing.T) {
@@ -75,7 +75,7 @@ func TestRedis(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Millisecond*100), time.Millisecond*500)
+	}))
 }
 
 func TestHybrid(t *testing.T) {
@@ -83,7 +83,7 @@ func TestHybrid(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Millisecond*100, NewLocal(time.Millisecond*100)), time.Millisecond*500)
+	}, NewLocal(10, int64(10<<20)), time.Minute*1))
 }
 
 func TestHybridRedis(t *testing.T) {
@@ -91,5 +91,5 @@ func TestHybridRedis(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Millisecond*100, NewLocal(time.Nanosecond)), time.Millisecond*500)
+	}, NewLocal(10, int64(10<<20)), time.Nanosecond))
 }
