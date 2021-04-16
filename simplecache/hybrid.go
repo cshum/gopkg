@@ -49,7 +49,7 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 			return
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
-		if ttl > c.Local.TTL {
+		if ttl >= c.Local.TTL {
 			// if redis still more ttl than local, re-cache at local
 			if err = c.Local.Set(key, value); err != nil {
 				return
