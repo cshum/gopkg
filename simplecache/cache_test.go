@@ -83,7 +83,7 @@ func TestHybrid(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Millisecond*100, time.Millisecond*100), time.Millisecond*500)
+	}, time.Millisecond*100, NewLocal(time.Millisecond*100)), time.Millisecond*500)
 }
 
 func TestHybridRedis(t *testing.T) {
@@ -91,5 +91,5 @@ func TestHybridRedis(t *testing.T) {
 		Dial: func() (conn redis.Conn, err error) {
 			return redis.Dial("tcp", ":6379")
 		},
-	}, time.Millisecond*100, time.Nanosecond), time.Millisecond*500)
+	}, time.Millisecond*100, NewLocal(time.Nanosecond)), time.Millisecond*500)
 }

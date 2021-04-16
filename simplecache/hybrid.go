@@ -13,11 +13,11 @@ type Hybrid struct {
 	Local  *Local
 }
 
-func NewHybrid(redis *redis.Pool, ttl, localTTL time.Duration) *Hybrid {
+func NewHybrid(redis *redis.Pool, ttl time.Duration, local *Local) *Hybrid {
 	return &Hybrid{
 		Pool:  redis,
 		TTL:   ttl,
-		Local: NewLocal(localTTL),
+		Local: local,
 	}
 }
 
