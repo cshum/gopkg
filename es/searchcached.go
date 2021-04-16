@@ -7,21 +7,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cshum/gopkg/simplecache"
 	"github.com/cshum/gopkg/strof"
-	"github.com/cshum/gopkg/tinycache"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
 )
 
 type CachedRequest struct {
-	Elastic    *elastic.Client
-	Cache      tinycache.Cache
-	Prefix     string
-	Key        string
-	Threshold  time.Duration
-	Refresh    time.Duration
-	Expiration time.Duration
-	Logger     *zap.Logger
+	Elastic   *elastic.Client
+	Cache     simplecache.Cache
+	Prefix    string
+	Key       string
+	Threshold time.Duration
+	Refresh   time.Duration
+	Logger    *zap.Logger
 }
 
 type CachedPayload struct {
@@ -64,7 +63,7 @@ func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult)
 	if val, err := json.Marshal(&CachedPayload{
 		Timestamp(), result,
 	}); err == nil {
-		if err := r.Cache.Set(key, val, r.Expiration); err != nil && r.Logger != nil {
+		if err := r.Cache.Set(key, val); err != nil && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
@@ -80,7 +79,7 @@ func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64
 		cached := &CachedPayload{}
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
-		} else if err == tinycache.NotFound && r.Logger != nil {
+		} else if err == simplecache.NotFound && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}

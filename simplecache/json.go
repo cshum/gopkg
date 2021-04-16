@@ -1,4 +1,4 @@
-package tinycache
+package simplecache
 
 import (
 	"encoding/json"
