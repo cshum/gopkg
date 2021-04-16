@@ -4,29 +4,26 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/patrickmn/go-cache"
 )
 
 type Hybrid struct {
-	Pool     *redis.Pool
-	Prefix   string
-	Local    *cache.Cache
-	RedisTTL time.Duration
-	LocalTTL time.Duration
+	Pool   *redis.Pool
+	TTL    time.Duration
+	Prefix string
+	Local  *Local
 }
 
-func NewHybrid(redis *redis.Pool, redisTTL, localTTL time.Duration) *Hybrid {
+func NewHybrid(redis *redis.Pool, ttl, localTTL time.Duration) *Hybrid {
 	return &Hybrid{
-		Pool:     redis,
-		Local:    cache.New(localTTL, localTTL),
-		RedisTTL: redisTTL,
-		LocalTTL: localTTL,
+		Pool:  redis,
+		TTL:   ttl,
+		Local: NewLocal(localTTL),
 	}
 }
 
 func (c *Hybrid) Get(key string) (value []byte, err error) {
-	if res, ok := c.Local.Get(key); ok {
-		value = res.([]byte)
+	if val, err2 := c.Local.Get(key); err2 == nil || err2 != NotFound {
+		value = val
 		return
 	}
 	if c.Pool != nil {
@@ -52,10 +49,11 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 			return
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
-		if ttl > c.LocalTTL {
-			c.Local.Set(key, value, c.LocalTTL)
-		} else {
-			c.Local.Set(key, value, ttl)
+		if ttl > c.Local.TTL {
+			// if redis still more ttl than local, re-cache at local
+			if err = c.Local.Set(key, value); err != nil {
+				return
+			}
 		}
 		return
 	}
@@ -64,12 +62,14 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 }
 
 func (c *Hybrid) Set(key string, value []byte) error {
-	c.Local.Set(key, value, c.LocalTTL)
+	if err := c.Local.Set(key, value); err != nil {
+		return err
+	}
 	if c.Pool != nil {
 		conn := c.Pool.Get()
 		defer conn.Close()
 		if _, err := conn.Do(
-			"PSETEX", c.Prefix+key, int64(c.RedisTTL/time.Millisecond), value); err != nil {
+			"PSETEX", c.Prefix+key, int64(c.TTL/time.Millisecond), value); err != nil {
 			return err
 		}
 	}
