@@ -11,4 +11,4 @@ type Cache interface {
 	Set(key string, value []byte, ttl time.Duration) error
 }
 
-var NotFound = errw.NotFound("tinycache: not found")
+var NotFound = errw.NotFound("simplecache: not found")

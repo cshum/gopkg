@@ -7,17 +7,15 @@ import (
 )
 
 type Hybrid struct {
-	Pool        *redis.Pool
-	Prefix      string
-	Local       *Local
-	MaxLocalTTL time.Duration
+	Pool   *redis.Pool
+	Prefix string
+	Local  *Local
 }
 
-func NewHybrid(redis *redis.Pool, local *Local, maxLocalTTL time.Duration) *Hybrid {
+func NewHybrid(redis *redis.Pool, local *Local) *Hybrid {
 	return &Hybrid{
-		Pool:        redis,
-		Local:       local,
-		MaxLocalTTL: maxLocalTTL,
+		Pool:  redis,
+		Local: local,
 	}
 }
 
@@ -49,12 +47,8 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 			return
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
-		localTTL := ttl
-		if ttl > c.MaxLocalTTL {
-			localTTL = c.MaxLocalTTL
-		}
-		// if redis still more ttl than local, re-cache at local
-		if err = c.Local.Set(key, value, localTTL); err != nil {
+		// if redis item still has ttl, re-cache at local
+		if err = c.Local.Set(key, value, ttl); err != nil {
 			return
 		}
 		return
@@ -64,11 +58,7 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 }
 
 func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
-	localTTL := ttl
-	if ttl > c.MaxLocalTTL {
-		localTTL = c.MaxLocalTTL
-	}
-	if err := c.Local.Set(key, value, localTTL); err != nil {
+	if err := c.Local.Set(key, value, ttl); err != nil {
 		return err
 	}
 	if c.Pool != nil {
