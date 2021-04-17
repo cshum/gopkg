@@ -12,23 +12,28 @@ func DoTestCache(t *testing.T, c Cache) {
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(err, "should value nil and err not found")
 	}
+	time.Sleep(time.Millisecond)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(err, "should value nil and err not found")
 	}
+	time.Sleep(time.Millisecond)
 	// set and found
 	if err := c.Set("a", []byte{'b'}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
+	time.Sleep(time.Millisecond)
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
 		t.Error(err, "should value and no error")
 	}
+	time.Sleep(time.Millisecond)
 	if v, err := c.Get("a"); string(v) != "b" || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Second * 1)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
+	time.Sleep(time.Millisecond)
 	// set nil and found nil
 	/*
 		if err := c.Set("n", nil, time.Minute*1); err != nil {
@@ -47,20 +52,24 @@ func DoTestCache(t *testing.T, c Cache) {
 	if err := JSONUnmarshal(c, "a", v); err != NotFound {
 		t.Error(err, "should value nil and err not found")
 	}
+	time.Sleep(time.Millisecond)
 	if err := JSONUnmarshal(c, "a", v); err != NotFound {
 		t.Error(err, "should value nil and err not found")
 	}
+	time.Sleep(time.Millisecond)
 	// set and found
 	if err := JSONMarshal(c, "a", []int{1, 2, 3}, time.Millisecond*100); err != nil {
 		t.Error(err)
 	}
+	time.Sleep(time.Millisecond)
 	if raw, err := c.Get("a"); string(raw) != "[1,2,3]" || err != nil {
 		t.Error(err, "should value and no error")
 	}
+	time.Sleep(time.Millisecond)
 	if err := JSONUnmarshal(c, "a", &v); len(v) != 3 || v[2] != 3 || err != nil {
 		t.Error(err, "should value and no error")
 	}
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Second * 1)
 	if v, err := c.Get("a"); v != nil || err != NotFound {
 		t.Error(v, err, "should value nil and err not found")
 	}
