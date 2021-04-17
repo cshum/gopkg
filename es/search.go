@@ -3,6 +3,7 @@ package es
 import (
 	"context"
 	"errors"
+
 	"github.com/cshum/gopkg/dev"
 	"github.com/cshum/gopkg/paginator"
 	"github.com/olivere/elastic"

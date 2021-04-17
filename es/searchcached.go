@@ -14,13 +14,14 @@ import (
 )
 
 type CachedRequest struct {
-	Elastic   *elastic.Client
-	Cache     simplecache.Cache
-	Prefix    string
-	Key       string
-	Threshold time.Duration
-	Refresh   time.Duration
-	Logger    *zap.Logger
+	Elastic    *elastic.Client
+	Cache      simplecache.Cache
+	Prefix     string
+	Key        string
+	Threshold  time.Duration
+	Refresh    time.Duration
+	Expiration time.Duration
+	Logger     *zap.Logger
 }
 
 type CachedPayload struct {
@@ -41,8 +42,8 @@ func (r *CachedRequest) Do(
 		r.Key = r.Prefix + key
 	}
 	if cached, ts := r.getSearchCache(r.Key); cached != nil {
-		elasped := time.Millisecond * time.Duration(Timestamp()-ts)
-		if r.Refresh > 0 && elasped >= r.Refresh {
+		elapsed := time.Millisecond * time.Duration(Timestamp()-ts)
+		if r.Refresh > 0 && elapsed >= r.Refresh {
 			go func() {
 				if result, err := r.Elastic.Search(indices...).
 					SearchSource(source).Do(context.Background()); err == nil {
@@ -63,7 +64,7 @@ func (r *CachedRequest) setSearchCache(key string, result *elastic.SearchResult)
 	if val, err := json.Marshal(&CachedPayload{
 		Timestamp(), result,
 	}); err == nil {
-		if err := r.Cache.Set(key, val); err != nil && r.Logger != nil {
+		if err := r.Cache.Set(key, val, r.Expiration); err != nil && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
@@ -79,7 +80,7 @@ func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64
 		cached := &CachedPayload{}
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
-		} else if err == simplecache.NotFound && r.Logger != nil {
+		} else if err != simplecache.NotFound && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
