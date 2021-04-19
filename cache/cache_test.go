@@ -35,6 +35,8 @@ func DoTestCache(t *testing.T, c Cache) {
 	}
 	time.Sleep(time.Millisecond)
 	// set nil and found nil
+	// disabled due to unable to distinglish
+	// nil, empty bytes and not found for redis
 	/*
 		if err := c.Set("n", nil, time.Minute*1); err != nil {
 			t.Error("should nil value and no error")
