@@ -24,36 +24,31 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 		value = val
 		return
 	}
-	if c.Pool != nil {
-		conn := c.Pool.Get()
-		defer conn.Close()
-		if err = conn.Send("GET", c.Prefix+key); err != nil {
-			return
-		}
-		if err = conn.Send("PTTL", c.Prefix+key); err != nil {
-			return
-		}
-		if err = conn.Flush(); err != nil {
-			return
-		}
-		if value, err = redis.Bytes(conn.Receive()); err != nil {
-			if err == redis.ErrNil {
-				err = NotFound
-			}
-			return
-		}
-		var pttl int64
-		if pttl, err = redis.Int64(conn.Receive()); err != nil {
-			return
-		}
-		ttl := time.Duration(pttl) * time.Millisecond
-		// if redis item still has ttl, re-cache at local
-		if err = c.Cache.Set(key, value, ttl); err != nil {
-			return
+	var conn = c.Pool.Get()
+	defer conn.Close()
+	if err = conn.Send("GET", c.Prefix+key); err != nil {
+		return
+	}
+	if err = conn.Send("PTTL", c.Prefix+key); err != nil {
+		return
+	}
+	if err = conn.Flush(); err != nil {
+		return
+	}
+	if value, err = redis.Bytes(conn.Receive()); err != nil {
+		if err == redis.ErrNil {
+			err = NotFound
 		}
 		return
 	}
-	err = NotFound
+	var pTTL int64
+	if pTTL, err = redis.Int64(conn.Receive()); err != nil {
+		return
+	}
+	// if redis item has ttl then re-cache
+	if err = c.Cache.Set(key, value, fromMillis(pTTL)); err != nil {
+		return
+	}
 	return
 }
 
@@ -61,13 +56,10 @@ func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
 	if err := c.Cache.Set(key, value, ttl); err != nil {
 		return err
 	}
-	if c.Pool != nil {
-		conn := c.Pool.Get()
-		defer conn.Close()
-		if _, err := conn.Do(
-			"PSETEX", c.Prefix+key, int64(ttl/time.Millisecond), value); err != nil {
-			return err
-		}
+	var conn = c.Pool.Get()
+	defer conn.Close()
+	if _, err := conn.Do("PSETEX", c.Prefix+key, toMillis(ttl), value); err != nil {
+		return err
 	}
 	return nil
 }

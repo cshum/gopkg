@@ -17,19 +17,19 @@ func NewRedis(pool *redis.Pool) *Redis {
 	}
 }
 
-func (r *Redis) Get(key string) ([]byte, error) {
-	c := r.Pool.Get()
+func (r *Redis) Get(key string) (res []byte, err error) {
+	var c = r.Pool.Get()
 	defer c.Close()
-	res, err := redis.Bytes(c.Do("GET", r.Prefix+key))
+	res, err = redis.Bytes(c.Do("GET", r.Prefix+key))
 	if err == redis.ErrNil {
-		return nil, NotFound
+		err = NotFound
 	}
-	return res, err
+	return
 }
 
 func (r *Redis) Set(key string, value []byte, ttl time.Duration) error {
-	c := r.Pool.Get()
+	var c = r.Pool.Get()
 	defer c.Close()
-	_, err := c.Do("PSETEX", r.Prefix+key, int64(ttl/time.Millisecond), value)
+	_, err := c.Do("PSETEX", r.Prefix+key, toMillis(ttl), value)
 	return err
 }

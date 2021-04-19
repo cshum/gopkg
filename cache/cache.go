@@ -12,3 +12,11 @@ type Cache interface {
 }
 
 var NotFound = errw.NotFound("cache: not found")
+
+func toMillis(d time.Duration) int64 {
+	return int64(d / time.Millisecond)
+}
+
+func fromMillis(pTTL int64) time.Duration {
+	return time.Duration(pTTL) * time.Millisecond
+}
