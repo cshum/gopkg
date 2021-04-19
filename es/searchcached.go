@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cshum/gopkg/simplecache"
+	"github.com/cshum/gopkg/cache"
 	"github.com/cshum/gopkg/strof"
 	"github.com/olivere/elastic"
 	"go.uber.org/zap"
@@ -15,7 +15,7 @@ import (
 
 type CachedRequest struct {
 	Elastic    *elastic.Client
-	Cache      simplecache.Cache
+	Cache      cache.Cache
 	Prefix     string
 	Key        string
 	Threshold  time.Duration
@@ -80,7 +80,7 @@ func (r *CachedRequest) getSearchCache(key string) (*elastic.SearchResult, int64
 		cached := &CachedPayload{}
 		if err := json.Unmarshal(val, cached); err == nil {
 			return cached.Result, cached.Timestamp
-		} else if err != simplecache.NotFound && r.Logger != nil {
+		} else if err != cache.NotFound && r.Logger != nil {
 			r.Logger.Error("es-cache", zap.Error(err))
 		}
 	}
