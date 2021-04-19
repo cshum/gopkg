@@ -20,7 +20,7 @@ func NewHybrid(redis *redis.Pool, cache Cache) *Hybrid {
 }
 
 func (c *Hybrid) Get(key string) (value []byte, err error) {
-	if val, err2 := c.Cache.Get(key); err2 == nil || err2 != NotFound {
+	if val, err_ := c.Cache.Get(key); err_ == nil {
 		value = val
 		return
 	}
