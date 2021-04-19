@@ -7,7 +7,7 @@ import (
 )
 
 type Local struct {
-	Cache    *ristretto.Cache
+	*ristretto.Cache
 	MaxItems int64
 	MaxSize  int64
 	MaxTTL   time.Duration

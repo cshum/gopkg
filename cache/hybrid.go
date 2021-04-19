@@ -9,18 +9,18 @@ import (
 type Hybrid struct {
 	Pool   *redis.Pool
 	Prefix string
-	Local  *Local
+	Cache  Cache
 }
 
-func NewHybrid(redis *redis.Pool, local *Local) *Hybrid {
+func NewHybrid(redis *redis.Pool, cache Cache) *Hybrid {
 	return &Hybrid{
 		Pool:  redis,
-		Local: local,
+		Cache: cache,
 	}
 }
 
 func (c *Hybrid) Get(key string) (value []byte, err error) {
-	if val, err2 := c.Local.Get(key); err2 == nil || err2 != NotFound {
+	if val, err2 := c.Cache.Get(key); err2 == nil || err2 != NotFound {
 		value = val
 		return
 	}
@@ -48,7 +48,7 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 		}
 		ttl := time.Duration(pttl) * time.Millisecond
 		// if redis item still has ttl, re-cache at local
-		if err = c.Local.Set(key, value, ttl); err != nil {
+		if err = c.Cache.Set(key, value, ttl); err != nil {
 			return
 		}
 		return
@@ -58,7 +58,7 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 }
 
 func (c *Hybrid) Set(key string, value []byte, ttl time.Duration) error {
-	if err := c.Local.Set(key, value, ttl); err != nil {
+	if err := c.Cache.Set(key, value, ttl); err != nil {
 		return err
 	}
 	if c.Pool != nil {
