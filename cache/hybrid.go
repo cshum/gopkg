@@ -45,9 +45,11 @@ func (c *Hybrid) Get(key string) (value []byte, err error) {
 	if pTTL, err = redis.Int64(conn.Receive()); err != nil {
 		return
 	}
-	// if redis item has ttl then re-cache
-	if err = c.Cache.Set(key, value, fromMillis(pTTL)); err != nil {
-		return
+	if pTTL > 0 {
+		// if redis item has ttl then re-cache
+		if err = c.Cache.Set(key, value, fromMillis(pTTL)); err != nil {
+			return
+		}
 	}
 	return
 }
